@@ -1,0 +1,17 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ IDEA
+.idea
+*.iml
+
+# VS Code
+.vscode/
+
+# Secrets
+application-prod.properties
+application-dev.properties
+
+# Logs
+*.log
