@@ -36,20 +36,20 @@ public class TelegramBotService extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if (update.hasMessage()) {
             try {
-                logger.info("Пришло сообщение от пользователя...");
+                logger.info("[TelegramBotService] Пришло сообщение от пользователя...");
                 commandsService.executeCommand(update, this);
             } catch (Exception e) {
-                logger.error("Не удалось принять и обработать сообщение пользователя", e);
+                logger.error("[TelegramBotService] Не удалось принять и обработать сообщение пользователя", e);
             }
         } else if (update.hasCallbackQuery()) {
             AnswerCallbackQuery answer = new AnswerCallbackQuery();
             answer.setCallbackQueryId(update.getCallbackQuery().getId());
             try {
-                logger.info("Пришёл Callback-запрос от пользователя...");
+                logger.info("[TelegramBotService] Пришёл Callback-запрос от пользователя...");
                 commandsService.executeCommand(update, this);
                 execute(answer);
             } catch (Exception e) {
-                logger.error("Не удалось принять и обработать Callback-запрос пользователя", e);
+                logger.error("[TelegramBotService] Не удалось принять и обработать Callback-запрос пользователя", e);
             }
         }
     }
