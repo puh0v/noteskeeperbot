@@ -39,7 +39,7 @@ public class StartCommand implements Commands {
 
     @Override
     public void execute(Long userId, String userMessage, Update update, TelegramBotService telegramBotService) {
-        logger.info("Началось выполнение команды {} пользователя {} ...", getCommandName(), userId);
+        logger.info("[StartCommand] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
 
         String text = "\uD83D\uDCDD Добро пожаловать в Notes Keeper Bot! \uD83D\uDCDD\n\n" +
                 "⚠\uFE0F Бот пока в стадии разработки, многие функции ещё в процессе реализации.\n" +
@@ -59,7 +59,7 @@ public class StartCommand implements Commands {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup(rows);
 
         try {
-            logger.info("Началась подготовка к отправке изображения пользователю {} ...", userId);
+            logger.info("[StartCommand] Начначинаю подготовку изображения для пользователя {} ...", userId);
 
             InputStream imageStream = getClass().getClassLoader().getResourceAsStream("static/images/paper.png");
             if (imageStream == null) {
@@ -73,15 +73,15 @@ public class StartCommand implements Commands {
             image.setReplyMarkup(inlineKeyboardMarkup);
             telegramBotService.execute(image);
         } catch (Exception e) {
-            logger.error("Возникла ошибка при подготовке к отправке сообщения пользователю {} : {}", userId, e.getMessage(), e);
+            logger.error("[StartCommand] Возникла ошибка при подготовке изображения для пользователя {} : {}", userId, e.getMessage(), e);
 
             SendMessage fallbackMessage = new SendMessage(userId.toString(), text);
             fallbackMessage.setReplyMarkup(inlineKeyboardMarkup);
             try {
-                logger.info("Повторная подготовка к отправке изображения пользователю {} ...", userId);
+                logger.info("[StartCommand] Повторная подготовка изображения для пользователя {} ...", userId);
                 telegramBotService.execute(fallbackMessage);
             } catch (Exception e1) {
-                logger.error("Возникла повторная ошибка при подготовке к отправке сообщения пользователю {} : {}", userId, e1.getMessage(), e1);
+                logger.error("[StartCommand] Возникла повторная ошибка при подготовке изображения для пользователя {} : {}", userId, e1.getMessage(), e1);
             }
         }
     }
