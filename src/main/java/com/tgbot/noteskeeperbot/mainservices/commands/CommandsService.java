@@ -33,6 +33,8 @@ public class CommandsService {
     }
 
     public void executeCommand(Update update, TelegramBotService telegramBotService) {
+        logger.info("[CommandsService] Получаю более подробную информацию о сообщении...");
+
         Optional<Long> optUserId = getUserId(update);
         Optional<String> optUserMessage = getUserMessage(update);
 
@@ -47,18 +49,18 @@ public class CommandsService {
 
         // --------------- Обработка команды через Callback или текст ----------------------
         if (commandsMap.containsKey(userMessage)) {
-            logger.info("Поступила команда от пользователя: {}", userId);
+            logger.info("[CommandsService] Поступила команда от пользователя {}. Вызываю соответствующий класс...", userId);
 
             flagManager.resetFlag(userId);
             commandsMap.get(userMessage).execute(userId, userMessage, update, telegramBotService);
             return;
         }
 
-        // --------------- Callback-и (перелистывание страниц заменток) ---------------------
+        // --------------- Callback-и (пагинация) ---------------------
         for (Commands prefixes : commandsMap.values()) {
             String prefix = prefixes.getPagePrefix();
             if (userMessage.startsWith(prefix)) {
-                logger.info("Пользователь {} листает заметки в {}", userId, prefix);
+                logger.info("[CommandsService] Пользователь {} использует пагинацию. Вызываю соответствующий класс...", userId);
 
                 prefixes.execute(userId, userMessage, update, telegramBotService);
                 return;
@@ -68,7 +70,7 @@ public class CommandsService {
         // --------------- Отправляем сообщение/callback в класс-команду по флагу (напр., /cancel) ---------------------
         for (Commands command : commandsMap.values()) {
             if (flagManager.flagHasThisCommand(userId, command.getCommandName())) {
-                logger.info("Обработка сообщения/Callback по флагу от пользователя {}", userId);
+                logger.info("[CommandsService] Обработка сообщения/Callback-запроса по флагу от пользователя {}. Вызываю соответствующий класс...", userId);
 
                 command.execute(userId, userMessage, update, telegramBotService);
                 return;
