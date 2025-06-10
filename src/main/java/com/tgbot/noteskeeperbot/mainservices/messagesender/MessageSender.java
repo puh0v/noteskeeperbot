@@ -15,21 +15,21 @@ public class MessageSender {
 
     public void sendMessageToUser(Long userId, SendMessage message, TelegramBotService telegramBotService) {
         try {
-            logger.info("Началась отправка текстового сообщения пользователю {} ...", userId);
+            logger.info("[MessageSender] Начинаю отправку текстового сообщения пользователю {} ...", userId);
             telegramBotService.execute(message);
-            logger.info("Отправка текстового сообщения пользователю {} выполнена успешно!", userId);
+            logger.info("[MessageSender] Отправка текстового сообщения пользователю {} выполнена успешно!", userId);
         } catch (Exception e) {
-            logger.error("Ошибка при отправке текстового сообщения пользователю {} : {}", userId, e.getMessage(), e);
+            logger.error("[MessageSender] Ошибка при отправке текстового сообщения пользователю {} : {}", userId, e.getMessage(), e);
         }
     }
 
     public void sendImageToUser(Long userId, SendPhoto image, TelegramBotService telegramBotService) {
         try {
-            logger.info("Началась отправка изображения пользователю {} ...", userId);
+            logger.info("[MessageSender] Начинаю отправку изображения пользователю {} ...", userId);
             telegramBotService.execute(image);
-            logger.info("Отправка изображения пользователю {} выполнена успешно!", userId);
+            logger.info("[MessageSender] Отправка изображения пользователю {} выполнена успешно!", userId);
         } catch (Exception e) {
-            logger.error("Ошибка при отправке изображения пользователю {} : {}", userId, e.getMessage(), e);
+            logger.error("[MessageSender] Ошибка при отправке изображения пользователю {} : {}", userId, e.getMessage(), e);
         }
     }
 }
