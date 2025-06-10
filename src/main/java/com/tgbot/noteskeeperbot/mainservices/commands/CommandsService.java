@@ -48,6 +48,7 @@ public class CommandsService {
         // --------------- Обработка команды через Callback или текст ----------------------
         if (commandsMap.containsKey(userMessage)) {
             logger.info("Поступила команда от пользователя: {}", userId);
+
             flagManager.resetFlag(userId);
             commandsMap.get(userMessage).execute(userId, userMessage, update, telegramBotService);
             return;
@@ -58,6 +59,7 @@ public class CommandsService {
             String prefix = prefixes.getPagePrefix();
             if (userMessage.startsWith(prefix)) {
                 logger.info("Пользователь {} листает заметки в {}", userId, prefix);
+
                 prefixes.execute(userId, userMessage, update, telegramBotService);
                 return;
             }
@@ -67,6 +69,7 @@ public class CommandsService {
         for (Commands command : commandsMap.values()) {
             if (flagManager.flagHasThisCommand(userId, command.getCommandName())) {
                 logger.info("Обработка сообщения/Callback по флагу от пользователя {}", userId);
+
                 command.execute(userId, userMessage, update, telegramBotService);
                 return;
             }
