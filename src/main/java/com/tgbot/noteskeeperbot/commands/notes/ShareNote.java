@@ -55,16 +55,16 @@ public class ShareNote implements Commands {
 
         // --------------- Обрабатываем команды или Callback-и с пагинацией ----------------------
         if (userMessage.equals(getCommandName())) {
-            logger.info("Началось выполнение команды {} пользователя {} ...", getCommandName(), userId);
+            logger.info("[ShareNote] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
 
             if (notes.isEmpty()) {
-                logger.info("Список заметок пользователя пользователя {} пуст.", userId);
+                logger.info("[ShareNote] Список заметок пользователя {} пуст.", userId);
 
                 SendMessage message = notesPageBuilder.getNotesIsEmptyMessage(userId);
 
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
             } else if (!notes.isEmpty()) {
-                logger.info("Началась подготовка к выводу заметок для пользователя {}", userId);
+                logger.info("[ShareNote] Подготавливаю список заметок для пользователя {} ...", userId);
 
                 flagManager.resetFlag(userId);
                 SendMessage message = getReadyPageWithNotes(userId, 0, getPagePrefix());
@@ -73,9 +73,12 @@ public class ShareNote implements Commands {
                 flagManager.setFlag(userId, getCommandName());
             }
         } else if (update.hasCallbackQuery()) {
+            logger.info("[ShareNote] Поступил Callback-запрос от пользователя {} ...", userId);
             String data = update.getCallbackQuery().getData();
 
             if (data.startsWith(getPagePrefix())) {
+                logger.info("[ShareNote] Пользователь {} перелистывает страницу с заметками...", userId);
+
                 SendMessage message;
                 int page = Integer.parseInt(data.replace(getPagePrefix(), ""));
 
@@ -95,11 +98,15 @@ public class ShareNote implements Commands {
         // --------------- Обрабатываем ответы от пользователя по флагу ----------------------
         if (flagManager.flagHasThisCommand(userId, getCommandName())) {
             if (userMessage.matches("\\d+")) {
+                logger.info("[ShareNote] Пользователь {} ввёл номер заметки...", userId);
+
                 shareNote(notes, userId, userMessage, telegramBotService);
 
                 // СБРОС ФЛАГА НАХОДИТСЯ ВНУТРИ МЕТОДА
 
             } else if (userMessage.equals("/cancel")) {
+                logger.info("[ShareNote] Пользователь {} отменил пересылку заметки. Формирую сообщение для ответа...", userId);
+
                 SendMessage message = new SendMessage(userId.toString(), "\uD83D\uDEAB Вы отменили пересылку заметки");
 
                 InlineKeyboardButton mainMenu = callbackButtons.mainMenuButton();
@@ -111,15 +118,22 @@ public class ShareNote implements Commands {
                 inlineKeyboardMarkup.setKeyboard(rows);
 
                 message.setReplyMarkup(inlineKeyboardMarkup);
+
+                logger.info("[ShareNote] Сообщение с ответом пользователю {} готово!", userId);
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
                 flagManager.resetFlag(userId);
             }
         }
     }
 
+
     public void shareNote(List<NotesEntity> notes, Long userId, String userMessage, TelegramBotService telegramBotService) {
+        logger.info("[ShareNote] Проверяю наличие нужной заметки для пользователя {} ...", userId);
+
         int number = Integer.parseInt(userMessage) - 1;
         if (number >= 0 && number < notes.size()) {
+            logger.info("[ShareNote] Пользователь {} ввёл корректный номер заметки. Формирую сообщение для пересылки......", userId);
+
             NotesEntity note = notes.get(number);
             String noteText = note.getNoteText();
 
@@ -133,9 +147,13 @@ public class ShareNote implements Commands {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup(keyboardRows);
 
             message.setReplyMarkup(markup);
+
+            logger.info("[ShareNote] Сообщение с заметкой для пользователя {} готово!", userId);
             messageSender.sendMessageToUser(userId, message, telegramBotService);
             flagManager.resetFlag(userId);
         } else {
+            logger.info("[ShareNote] Пользователь {} ввёл несуществующий номер заметки. Формирую сообщение для уведомления ...", userId);
+
             SendMessage message = new SendMessage(userId.toString(), "❌ Такой заметки не существует. Выберите другую.");
 
             List<InlineKeyboardButton> cancelButtonRow = List.of(callbackButtons.cancelButton());
@@ -145,12 +163,16 @@ public class ShareNote implements Commands {
             inlineKeyboardMarkup.setKeyboard(rows);
 
             message.setReplyMarkup(inlineKeyboardMarkup);
+
+            logger.info("[ShareNote] Сообщение с уведомлением для пользователя {} готово!", userId);
             messageSender.sendMessageToUser(userId, message, telegramBotService);
         }
     }
 
 
     private SendMessage getReadyPageWithNotes(Long userId, Integer page, String pagePrefix) {
+        logger.info("[ShareNote] Начинаю формировать страницу с заметками для пользователя {} ...", userId);
+
         NotesPageDTO notesPageDTO = notesPageBuilder.getFieldsFromDTO(userId, page, pagePrefix, NotesViewMode.SELECTABLE);
         String textFromDTO = notesPageDTO.getText();
 
@@ -162,7 +184,7 @@ public class ShareNote implements Commands {
             keyboard.add(List.of(callbackButtons.mainMenuButton()));
         } else {
             finalText = (page == 0)
-                ? "✉\uFE0F Отправьте номер заметки, которую вы хотите переслать.\n\n\n" + textFromDTO
+                ? "✉\uFE0F Отправьте номер заметки, которую вы хотите переслать\n\n\n" + textFromDTO
                 : textFromDTO;
 
             keyboard.add(List.of(callbackButtons.cancelButton()));
@@ -174,6 +196,8 @@ public class ShareNote implements Commands {
         inlineKeyboardMarkup.setKeyboard(keyboard);
 
         message.setReplyMarkup(inlineKeyboardMarkup);
+
+        logger.info("[ShareNote] Страница с заметками для пользователя {} готова!", userId);
         return message;
     }
 }
