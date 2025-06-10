@@ -10,10 +10,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.tgbot</groupId>
-    <artifactId>tgbot</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>TGNotesBot</name>
-    <description>TGNotesBot</description>
+    <artifactId>noteskeeperbot</artifactId>
+    <version>1.0.0</version>
+    <name>NotesKeeperBot</name>
+    <description>A simple Telegram bot for storing personal notes with pagination.</description>
     <url/>
     <licenses>
         <license/>

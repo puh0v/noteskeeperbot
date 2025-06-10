@@ -4,23 +4,32 @@ import com.tgbot.noteskeeperbot.mainservices.bot.TelegramBotService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 @Service
 public class MessageSender {
 
+    private static final Logger logger = LoggerFactory.getLogger(MessageSender.class);
+
     public void sendMessageToUser(Long userId, SendMessage message, TelegramBotService telegramBotService) {
         try {
+            logger.info("Началась отправка текстового сообщения пользователю {} ...", userId);
             telegramBotService.execute(message);
+            logger.info("Отправка текстового сообщения пользователю {} выполнена успешно!", userId);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Ошибка при отправке текстового сообщения пользователю {} : {}", userId, e.getMessage(), e);
         }
     }
 
-    public void SendImageToUser(Long userId, SendPhoto image, TelegramBotService telegramBotService) {
+    public void sendImageToUser(Long userId, SendPhoto image, TelegramBotService telegramBotService) {
         try {
+            logger.info("Началась отправка изображения пользователю {} ...", userId);
             telegramBotService.execute(image);
+            logger.info("Отправка изображения пользователю {} выполнена успешно!", userId);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Ошибка при отправке изображения пользователю {} : {}", userId, e.getMessage(), e);
         }
     }
 }

@@ -14,6 +14,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,8 @@ public class ShareNote implements Commands {
     private final MessageSender messageSender;
     private final NotesPageBuilder notesPageBuilder;
     private final CallbackButtons callbackButtons;
+    private static final Logger logger = LoggerFactory.getLogger(ShareNote.class);
+
 
     public ShareNote(MyNotes myNotes, FlagManager flagManager, MessageSender messageSender, NotesPageBuilder notesPageBuilder, CallbackButtons callbackButtons) {
         this.myNotes = myNotes;
@@ -51,11 +55,17 @@ public class ShareNote implements Commands {
 
         // --------------- Обрабатываем команды или Callback-и с пагинацией ----------------------
         if (userMessage.equals(getCommandName())) {
+            logger.info("Началось выполнение команды {} пользователя {} ...", getCommandName(), userId);
+
             if (notes.isEmpty()) {
+                logger.info("Список заметок пользователя пользователя {} пуст.", userId);
+
                 SendMessage message = notesPageBuilder.getNotesIsEmptyMessage(userId);
 
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
             } else if (!notes.isEmpty()) {
+                logger.info("Началась подготовка к выводу заметок для пользователя {}", userId);
+
                 flagManager.resetFlag(userId);
                 SendMessage message = getReadyPageWithNotes(userId, 0, getPagePrefix());
 

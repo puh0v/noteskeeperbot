@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Service
@@ -13,6 +15,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     private final CommandsService commandsService;
     private final BotConfig botConfig;
+    private static final Logger logger = LoggerFactory.getLogger(TelegramBotService.class);
 
     public TelegramBotService(CommandsService commandsService, BotConfig botConfig) {
         this.commandsService = commandsService;
@@ -33,18 +36,20 @@ public class TelegramBotService extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if (update.hasMessage()) {
             try {
+                logger.info("Пришло сообщение от пользователя...");
                 commandsService.executeCommand(update, this);
             } catch (Exception e) {
-                e.printStackTrace();//TODO
+                logger.error("Не удалось принять и обработать сообщение пользователя", e);
             }
         } else if (update.hasCallbackQuery()) {
             AnswerCallbackQuery answer = new AnswerCallbackQuery();
             answer.setCallbackQueryId(update.getCallbackQuery().getId());
             try {
+                logger.info("Пришёл Callback-запрос от пользователя...");
                 commandsService.executeCommand(update, this);
                 execute(answer);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Не удалось принять и обработать Callback-запрос пользователя", e);
             }
         }
     }

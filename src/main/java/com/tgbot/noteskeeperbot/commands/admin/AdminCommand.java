@@ -74,7 +74,7 @@ public class AdminCommand implements Commands {
                         image.setPhoto(new InputFile(fileId));
                         image.setCaption(userMessage);
 
-                        messageSender.SendImageToUser(id, image, telegramBotService);
+                        messageSender.sendImageToUser(id, image, telegramBotService);
                     }
                     flagManager.resetFlag(userId);
                 }

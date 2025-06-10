@@ -2,13 +2,13 @@ package com.tgbot.noteskeeperbot.mainservices.commands;
 
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.commands.FlagManager;
-import com.tgbot.noteskeeperbot.commands.notes.MyNotes;
-import com.tgbot.noteskeeperbot.commands.notes.render.NotesPageBuilder;
 import com.tgbot.noteskeeperbot.mainservices.bot.TelegramBotService;
 import com.tgbot.noteskeeperbot.commands.admin.services.UserRegistryService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +20,7 @@ public class CommandsService {
 
     private final FlagManager flagManager;
     private final UserRegistryService userRegistry;
+    private static final Logger logger = LoggerFactory.getLogger(CommandsService.class);
 
     private final Map<String, Commands> commandsMap = new HashMap<>();
 
@@ -46,21 +47,26 @@ public class CommandsService {
 
         // --------------- Обработка команды через Callback или текст ----------------------
         if (commandsMap.containsKey(userMessage)) {
+            logger.info("Поступила команда от пользователя: {}", userId);
             flagManager.resetFlag(userId);
             commandsMap.get(userMessage).execute(userId, userMessage, update, telegramBotService);
             return;
         }
+
         // --------------- Callback-и (перелистывание страниц заменток) ---------------------
         for (Commands prefixes : commandsMap.values()) {
             String prefix = prefixes.getPagePrefix();
             if (userMessage.startsWith(prefix)) {
+                logger.info("Пользователь {} листает заметки в {}", userId, prefix);
                 prefixes.execute(userId, userMessage, update, telegramBotService);
                 return;
             }
         }
+
         // --------------- Отправляем сообщение/callback в класс-команду по флагу (напр., /cancel) ---------------------
         for (Commands command : commandsMap.values()) {
             if (flagManager.flagHasThisCommand(userId, command.getCommandName())) {
+                logger.info("Обработка сообщения/Callback по флагу от пользователя {}", userId);
                 command.execute(userId, userMessage, update, telegramBotService);
                 return;
             }
