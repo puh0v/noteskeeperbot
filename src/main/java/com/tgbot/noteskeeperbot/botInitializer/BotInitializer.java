@@ -5,12 +5,14 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 @Component
 public class BotInitializer {
 
-    // Инициализируем бота:
     private final TelegramBotService telegramBotService;
+    private static final Logger logger = LoggerFactory.getLogger(BotInitializer.class);
 
     public BotInitializer(TelegramBotService telegramBotService) {
         this.telegramBotService = telegramBotService;
@@ -19,12 +21,15 @@ public class BotInitializer {
     @PostConstruct
     public void init() {
         try {
+            logger.info("Началась инициализация бота...");
+
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
             botsApi.registerBot(telegramBotService);
         } catch (Exception e) {
-            //TODO
-            e.printStackTrace();
-            e.toString();
+            logger.error("Ошибка при инициализации бота: {}", e.getMessage(), e);
+            return;
         }
+
+        logger.info("Инициализация бота прошла успешно!");
     }
 }
