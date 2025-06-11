@@ -43,7 +43,7 @@ public class AdminCommand implements Commands {
     public void execute(Long userId, String userMessage, Update update, TelegramBotService telegramBotService) {
 
         if (userMessage.equals(getCommandName()) && userId == adminId) {
-            logger.info("Поступила команда от администратора...");
+            logger.info("[AdminCommand] Поступила команда от администратора...");
 
             flagManager.resetFlag(userId);
             SendMessage message = new SendMessage(userId.toString(), "Отправьте текст для рассылки " +
@@ -53,10 +53,10 @@ public class AdminCommand implements Commands {
             flagManager.setFlag(userId, getCommandName());
 
         } else if (flagManager.flagHasThisCommand(userId, getCommandName())) {
-            logger.info("Поступил ответ администратора (по флагу)...");
+            logger.info("[AdminCommand] Поступил ответ администратора (по флагу)...");
 
             if (userMessage.equals("/cancel")) {
-                logger.info("Администратор отменил рассылку пользователям");
+                logger.info("[AdminCommand] Администратор отменил рассылку пользователям.");
 
                 SendMessage message = new SendMessage(userId.toString(), "Рассылка отменена");
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
@@ -67,7 +67,7 @@ public class AdminCommand implements Commands {
                 List<UsersEntity> listOfUsers = userRegistry.getAllUsers();
 
                 if (update.getMessage().hasText() && !update.getMessage().hasPhoto()) {
-                    logger.info("Подготовка к рассылке текстового сообщения...");
+                    logger.info("[AdminCommand] Подготовка к рассылке текстового сообщения всем пользователям...");
 
                     for (UsersEntity user : listOfUsers) {
                         Long id = user.getUserId();
@@ -77,7 +77,7 @@ public class AdminCommand implements Commands {
                     flagManager.resetFlag(userId);
 
                 } else if (update.getMessage().hasPhoto()) {
-                    logger.info("Подготовка к рассылке изображения...");
+                    logger.info("[AdminCommand] Подготовка к рассылке изображения...");
 
                     List<PhotoSize> photoList = update.getMessage().getPhoto();
                     PhotoSize largestImage = photoList.get(photoList.size() - 1);
@@ -85,12 +85,16 @@ public class AdminCommand implements Commands {
 
                     for (UsersEntity user : listOfUsers) {
                         Long id = user.getUserId();
-                        SendPhoto image = new SendPhoto();
-                        image.setChatId(id);
-                        image.setPhoto(new InputFile(fileId));
-                        image.setCaption(userMessage);
+                        try {
+                            SendPhoto image = new SendPhoto();
+                            image.setChatId(id);
+                            image.setPhoto(new InputFile(fileId));
+                            image.setCaption(userMessage);
 
-                        messageSender.sendImageToUser(id, image, telegramBotService);
+                            messageSender.sendImageToUser(id, image, telegramBotService);
+                        } catch (Exception e) {
+                            logger.error("[AdminCommand] Не удалось отправить сообщение пользователю {} : {}", id, e.getMessage(), e);
+                        }
                     }
                     flagManager.resetFlag(userId);
                 }
