@@ -15,6 +15,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.util.*;
 
@@ -27,6 +29,7 @@ public class DeleteNote implements Commands {
     private final CallbackButtons callbackButtons;
     private final NotesPageBuilder notesPageBuilder;
     private final MessageSender messageSender;
+    private static final Logger logger = LoggerFactory.getLogger(DeleteNote.class);
 
     public DeleteNote(NoteRepository noteRepository, MyNotes myNotes, FlagManager flagManager, CallbackButtons callbackButtons, NotesPageBuilder notesPageBuilder, MessageSender messageSender) {
         this.noteRepository = noteRepository;
@@ -52,22 +55,30 @@ public class DeleteNote implements Commands {
         List<NotesEntity> notes = myNotes.getNotesByUserId(userId);
 
         if (userMessage.equals(getCommandName())) {
+            logger.info("[DeleteNote] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
+
             if (notes.isEmpty()) {
+                logger.info("[DeleteNote] Список заметок пользователя {} пуст.", userId);
+
                 SendMessage message = notesPageBuilder.getNotesIsEmptyMessage(userId);
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
 
-            } else if (!notes.isEmpty()) {
-                flagManager.resetFlag(userId);
+            } else {
+                logger.info("[DeleteNote] Подготавливаю список заметок для пользователя {} ...", userId);
 
+                flagManager.resetFlag(userId);
                 SendMessage message = getReadyPageWithNotes(userId, 0, getPagePrefix());
 
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
                 flagManager.setFlag(userId, getCommandName());
             }
         } else if (update.hasCallbackQuery()) {
+            logger.info("[DeleteNote] Поступил Callback-запрос от пользователя {} ...", userId);
             String data = update.getCallbackQuery().getData();
 
             if (data.startsWith(getPagePrefix())) {
+                logger.info("[DeleteNote] Пользователь {} перелистывает страницу с заметками...", userId);
+
                 int page = Integer.parseInt(data.replace(getPagePrefix(), ""));
                 SendMessage message = getReadyPageWithNotes(userId, page, getPagePrefix());
 
@@ -79,11 +90,15 @@ public class DeleteNote implements Commands {
         // --------------- Обрабатываем ответы боту по флагу ----------------------
         if (flagManager.flagHasThisCommand(userId, getCommandName())) {
             if (userMessage.matches("\\d+")) {
+                logger.info("[DeleteNote] Пользователь {} ввёл номер заметки...", userId);
+
                 deleteNote(userId, userMessage, notes, telegramBotService);
 
                 // СБРОС ФЛАГА НАХОДИТСЯ ВНУТРИ МЕТОДА
 
             } else if (userMessage.equals("/cancel")) {
+                logger.info("[DeleteNote] Пользователь {} отменил удаление заметки. Формирую сообщение для ответа...", userId);
+
                 SendMessage cancelMessage = new SendMessage(userId.toString(), "\uD83D\uDEAB Вы отменили удаление заметки");
 
                 List<InlineKeyboardButton> mainMenuButton = List.of(callbackButtons.mainMenuButton());
@@ -94,6 +109,7 @@ public class DeleteNote implements Commands {
 
                 cancelMessage.setReplyMarkup(inlineKeyboardMarkup);
 
+                logger.info("[DeleteNote] Сообщение с ответом пользователю {} готово!", userId);
                 messageSender.sendMessageToUser(userId, cancelMessage, telegramBotService);
                 flagManager.resetFlag(userId);
             }
@@ -101,9 +117,12 @@ public class DeleteNote implements Commands {
     }
 
     public void deleteNote(Long userId, String userMessage, List<NotesEntity> notes, TelegramBotService telegramBotService) {
-        int number = Integer.parseInt(userMessage) - 1;
+        logger.info("[DeleteNote] Проверяю наличие нужной заметки для пользователя {} ...", userId);
 
+        int number = Integer.parseInt(userMessage) - 1;
         if (number >= 0 && number < notes.size()) {
+            logger.info("[DeleteNote] Пользователь {} ввёл корректный номер заметки. Начинаю её удаление...", userId);
+
             NotesEntity noteToDelete = notes.get(number);
             noteRepository.delete(noteToDelete);
 
@@ -118,9 +137,12 @@ public class DeleteNote implements Commands {
 
             message.setReplyMarkup(inlineKeyboardMarkup);
 
+            logger.info("[DeleteNote] Заметка пользователя {} успешно удалена!", userId);
             messageSender.sendMessageToUser(userId, message, telegramBotService);
             flagManager.resetFlag(userId);
         } else {
+            logger.info("[DeleteNote] Пользователь {} ввёл несуществующий номер заметки. Формирую сообщение для уведомления ...", userId);
+
             SendMessage message = new SendMessage(userId.toString(), "❌ Такой заметки не существует. Выберите другую.");
 
             List<InlineKeyboardButton> cancelButton = List.of(callbackButtons.cancelButton());
@@ -130,12 +152,16 @@ public class DeleteNote implements Commands {
             inlineKeyboardMarkup.setKeyboard(rows);
 
             message.setReplyMarkup(inlineKeyboardMarkup);
+
+            logger.info("[DeleteNote] Сообщение с уведомлением для пользователя {} готово!", userId);
             messageSender.sendMessageToUser(userId, message, telegramBotService);
         }
     }
 
 
     private SendMessage getReadyPageWithNotes(Long userId, Integer page, String pagePrefix) {
+        logger.info("[DeleteNote] Подготавливаю сообщение с заметками для пользователя {} ...", userId);
+
         NotesPageDTO notesPageDTO = notesPageBuilder.getFieldsFromDTO(userId, page, pagePrefix, NotesViewMode.SELECTABLE);
         String textFromDTO = notesPageDTO.getText();
 
@@ -158,6 +184,8 @@ public class DeleteNote implements Commands {
         inlineKeyboardMarkup.setKeyboard(keyboard);
 
         message.setReplyMarkup(inlineKeyboardMarkup);
+
+        logger.info("[DeleteNote] Страница с заметками для пользователя {} готова!", userId);
         return message;
     }
 }
