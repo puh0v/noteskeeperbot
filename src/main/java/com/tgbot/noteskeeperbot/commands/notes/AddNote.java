@@ -12,6 +12,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.time.Instant;
 import java.util.List;
@@ -23,6 +25,7 @@ public class AddNote implements Commands {
     private final FlagManager flagManager;
     private final CallbackButtons callbackButtons;
     private final MessageSender messageSender;
+    private static final Logger logger = LoggerFactory.getLogger(AddNote.class);
 
     public AddNote(NoteRepository noteRepository, FlagManager flagManager, CallbackButtons callbackButtons, MessageSender messageSender) {
         this.noteRepository = noteRepository;
@@ -38,9 +41,10 @@ public class AddNote implements Commands {
 
     @Override
     public void execute(Long userId, String userMessage, Update update, TelegramBotService telegramBotService) {
-        String commandName = getCommandName();
 
         if (userMessage.equals(getCommandName())) {
+            logger.info("[AddNote] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
+
             flagManager.resetFlag(userId);
             SendMessage message = new SendMessage(userId.toString(), "✏\uFE0F Отправьте текст заметки");
 
@@ -58,12 +62,9 @@ public class AddNote implements Commands {
 
         } else if (flagManager.flagHasThisCommand(userId, getCommandName())) {
 
-            if (!userMessage.equals(commandName) && !userMessage.equals("/cancel")) {
-                addNote(userId, userMessage, telegramBotService);
+            if (userMessage.equals("/cancel")) {
+                logger.info("[AddNote] Пользователь {} отменил добавление заметки. Формирую сообщение для ответа...", userId);
 
-                // СБРОС ФЛАГА НАХОДИТСЯ ВНУТРИ МЕТОДА
-
-            } else if (flagManager.flagHasThisCommand(userId, getCommandName()) && userMessage.equals("/cancel")) {
                 SendMessage message = new SendMessage(userId.toString(), "Вы отменили добавление заметки");
 
                 InlineKeyboardButton mainMenu = callbackButtons.mainMenuButton();
@@ -77,23 +78,37 @@ public class AddNote implements Commands {
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
 
                 flagManager.resetFlag(userId);
+
+            } else {
+                logger.info("[AddNote] Пользователь {} прислал заметку...", userId);
+
+                addNote(userId, userMessage, telegramBotService);
+
+                // СБРОС ФЛАГА НАХОДИТСЯ ВНУТРИ МЕТОДА
             }
         }
     }
 
     public void addNote(Long userId, String userMessage, TelegramBotService telegramBotService) {
+        logger.info("[AddNote] Проверяю заметку пользователя {} на соответствие правилам добавления заметок...", userId);
 
         SendMessage message;
 
         if (userMessage.length() > 1000) {
+            logger.info("[AddNote] Заметка пользователя {} прешывает 1000 символов. Формирую сообщение с ответом...", userId);
+
             message = new SendMessage(userId.toString(), "Хм... Похоже, это уже не заметка, а целый роман 😅\n\n" +
             "✏\uFE0F Попробуйте сократить до 1000 символов и отправьте заметку ещё раз.");
-            messageSender.sendMessageToUser(userId, message, telegramBotService);
 
+            messageSender.sendMessageToUser(userId, message, telegramBotService);
             return;
+
         } else {
+            logger.info("[AddNote] Одобрено добавление заметки для пользователя {} . Подготавливаю сообщение для ответа...", userId);
+
             message = new SendMessage(userId.toString(), "✅ Заметка успешно добавлена!");
         }
+
         InlineKeyboardButton addNote = callbackButtons.addNoteButton();
         addNote.setText("➕ Добавить ещё одну");
 
@@ -106,6 +121,8 @@ public class AddNote implements Commands {
         inlineKeyboardMarkup.setKeyboard(rows);
 
         message.setReplyMarkup(inlineKeyboardMarkup);
+
+        logger.info("[AddNote] Добавляю заметку пользователя {} в БД...", userId);
         try {
             NotesEntity noteEntity = new NotesEntity();
             noteEntity.setUserId(userId);
@@ -113,12 +130,13 @@ public class AddNote implements Commands {
             noteEntity.setCreatedAt(Instant.now());
             noteRepository.save(noteEntity);
 
-            messageSender.sendMessageToUser(userId, message, telegramBotService);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("[AddNote] Произошла ошибка во время добавления заметки в БД и отправки ответа пользователю {} : {}", userId, e.getMessage(), e);
             return;
         }
+        logger.info("[AddNote] Заметка пользователя {} добавлена в БД!", userId);
 
+        messageSender.sendMessageToUser(userId, message, telegramBotService);
         flagManager.resetFlag(userId);
     }
 }
