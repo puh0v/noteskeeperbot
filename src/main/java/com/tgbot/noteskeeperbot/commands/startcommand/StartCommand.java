@@ -4,6 +4,7 @@ package com.tgbot.noteskeeperbot.commands.startcommand;
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.mainservices.bot.TelegramBotService;
 import com.tgbot.noteskeeperbot.commands.notes.ui.CallbackButtons;
+import com.tgbot.noteskeeperbot.mainservices.messagesender.MessageSender;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -23,10 +24,12 @@ import java.util.List;
 public class StartCommand implements Commands {
 
     private final CallbackButtons callBackButtons;
+    private final MessageSender messageSender;
     private static final Logger logger = LoggerFactory.getLogger(StartCommand.class);
 
-    public StartCommand(CallbackButtons callBackButtons) {
+    public StartCommand(CallbackButtons callBackButtons, MessageSender messageSender) {
         this.callBackButtons = callBackButtons;
+        this.messageSender = messageSender;
     }
 
     @Value("${bot.name}")
@@ -58,31 +61,33 @@ public class StartCommand implements Commands {
         List<List<InlineKeyboardButton>> rows = List.of(myNotesRow, addNoteRow);
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup(rows);
 
-        try {
-            logger.info("[StartCommand] Начинаю подготовку изображения для пользователя {} ...", userId);
+        SendPhoto image = new SendPhoto();
+        image.setChatId(userId.toString());
 
+        logger.info("[StartCommand] Начинаю подготовку изображения для пользователя {} ...", userId);
+        try {
             InputStream imageStream = getClass().getClassLoader().getResourceAsStream("static/images/paper.png");
+
             if (imageStream == null) {
                 throw new RuntimeException("Файл \"static/images/paper.png\" не найден");
             }
 
-            SendPhoto image = new SendPhoto();
-            image.setChatId(userId.toString());
             image.setPhoto(new InputFile(imageStream, "paper.png"));
             image.setCaption(text);
             image.setReplyMarkup(inlineKeyboardMarkup);
-            telegramBotService.execute(image);
         } catch (Exception e) {
             logger.error("[StartCommand] Возникла ошибка при подготовке изображения для пользователя {} : {}", userId, e.getMessage(), e);
 
             SendMessage fallbackMessage = new SendMessage(userId.toString(), text);
             fallbackMessage.setReplyMarkup(inlineKeyboardMarkup);
+            logger.info("[StartCommand] Повторная подготовка изображения для пользователя {} ...", userId);
             try {
-                logger.info("[StartCommand] Повторная подготовка изображения для пользователя {} ...", userId);
-                telegramBotService.execute(fallbackMessage);
+                messageSender.sendMessageToUser(userId, fallbackMessage, telegramBotService);
             } catch (Exception e1) {
                 logger.error("[StartCommand] Возникла повторная ошибка при подготовке изображения для пользователя {} : {}", userId, e1.getMessage(), e1);
             }
+            return;
         }
+        messageSender.sendImageToUser(userId, image, telegramBotService);
     }
 }
