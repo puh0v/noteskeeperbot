@@ -59,11 +59,11 @@ public class StartCommand implements Commands {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup(rows);
 
         try {
-            logger.info("[StartCommand] Начначинаю подготовку изображения для пользователя {} ...", userId);
+            logger.info("[StartCommand] Начинаю подготовку изображения для пользователя {} ...", userId);
 
             InputStream imageStream = getClass().getClassLoader().getResourceAsStream("static/images/paper.png");
             if (imageStream == null) {
-                throw new RuntimeException("Файл \"static.images/paper.png\" не найден");
+                throw new RuntimeException("Файл \"static/images/paper.png\" не найден");
             }
 
             SendPhoto image = new SendPhoto();
