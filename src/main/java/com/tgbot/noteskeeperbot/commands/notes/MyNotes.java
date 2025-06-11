@@ -14,6 +14,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ public class MyNotes implements Commands {
     private final CallbackButtons callbackButtons;
     private final NotesPageBuilder notesPageBuilder;
     private final MessageSender messageSender;
+    private static final Logger logger = LoggerFactory.getLogger(MyNotes.class);
 
     public MyNotes(NoteService noteService, CallbackButtons callbackButtons, NotesPageBuilder notesPageBuilder, MessageSender messageSender) {
         this.noteService = noteService;
@@ -49,30 +52,40 @@ public class MyNotes implements Commands {
         List<NotesEntity> notes = noteService.getAllUserNotes(userId);
 
         if (userMessage.equals(getCommandName())) {
+            logger.info("[MyNotes] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
+
             if (notes.isEmpty()) {
+                logger.info("[MyNotes] Список заметок пользователя {} пуст.", userId);
+
                 SendMessage message = notesPageBuilder.getNotesIsEmptyMessage(userId);
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
-            } else if (!notes.isEmpty()) {
-                SendMessage message = getReadyPageWithNotes(userId, 0, getPagePrefix());
+            } else {
+                logger.info("[MyNotes] Подготавливаю список заметок для пользователя {} ...", userId);
 
+                SendMessage message = getReadyPageWithNotes(userId, 0, getPagePrefix());
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
             }
         } else if (update.hasCallbackQuery()) {
+            logger.info("[MyNotes] Поступил Callback-запрос от пользователя {} ...", userId);
             String data = update.getCallbackQuery().getData();
 
             if (data.startsWith(getPagePrefix())) {
+                logger.info("[MyNotes] Пользователь {} перелистывает страницу с заметками...", userId);
                 int page = Integer.parseInt(data.replace(getPagePrefix(), ""));
-                SendMessage message = getReadyPageWithNotes(userId, page, getPagePrefix());
 
+                SendMessage message = getReadyPageWithNotes(userId, page, getPagePrefix());
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
             }
         }
     }
 
-    private SendMessage getReadyPageWithNotes(Long userId, Integer page, String pagePrefix) {
-        NotesPageDTO notesPageDTO = notesPageBuilder.getFieldsFromDTO(userId, page, pagePrefix, NotesViewMode.PREVIEW);
 
+    private SendMessage getReadyPageWithNotes(Long userId, Integer page, String pagePrefix) {
+        logger.info("[MyNotes] Подготавливаю сообщение с заметками для пользователя {} ...", userId);
+
+        NotesPageDTO notesPageDTO = notesPageBuilder.getFieldsFromDTO(userId, page, pagePrefix, NotesViewMode.PREVIEW);
         String textFromDTO = notesPageDTO.getText();
+
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>(notesPageDTO.getKeyboard());
 
         if (notesPageDTO.getKeyboard().isEmpty() && page > 0) {
@@ -89,6 +102,8 @@ public class MyNotes implements Commands {
         inlineKeyboardMarkup.setKeyboard(keyboard);
 
         message.setReplyMarkup(inlineKeyboardMarkup);
+        logger.info("[MyNotes] Страница с заметками для пользователя {} готова!", userId);
+
         return message;
     }
 
