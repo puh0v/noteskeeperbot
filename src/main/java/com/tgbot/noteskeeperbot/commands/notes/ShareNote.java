@@ -63,7 +63,7 @@ public class ShareNote implements Commands {
                 SendMessage message = notesPageBuilder.getNotesIsEmptyMessage(userId);
 
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
-            } else if (!notes.isEmpty()) {
+            } else {
                 logger.info("[ShareNote] Подготавливаю список заметок для пользователя {} ...", userId);
 
                 flagManager.resetFlag(userId);
@@ -171,7 +171,7 @@ public class ShareNote implements Commands {
 
 
     private SendMessage getReadyPageWithNotes(Long userId, Integer page, String pagePrefix) {
-        logger.info("[ShareNote] Начинаю формировать страницу с заметками для пользователя {} ...", userId);
+        logger.info("[ShareNote] Подготавливаю сообщение с заметками для пользователя {} ...", userId);
 
         NotesPageDTO notesPageDTO = notesPageBuilder.getFieldsFromDTO(userId, page, pagePrefix, NotesViewMode.SELECTABLE);
         String textFromDTO = notesPageDTO.getText();
