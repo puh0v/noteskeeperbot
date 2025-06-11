@@ -124,7 +124,14 @@ public class DeleteNote implements Commands {
             logger.info("[DeleteNote] Пользователь {} ввёл корректный номер заметки. Начинаю её удаление...", userId);
 
             NotesEntity noteToDelete = notes.get(number);
-            noteRepository.delete(noteToDelete);
+
+            try {
+                noteRepository.delete(noteToDelete);
+            } catch (Exception e) {
+                logger.error("[DeleteNote] Произошла ошибка во время удаления заметки пользователя {} : {}", userId, e.getMessage(), e);
+                return;
+            }
+            logger.info("[DeleteNote] Заметка пользователя {} успешно удалена! Подготавливаю сообщение для ответа...", userId);
 
             SendMessage message = new SendMessage(userId.toString(), "✅ Заметка успешно удалена!");
 
@@ -137,7 +144,6 @@ public class DeleteNote implements Commands {
 
             message.setReplyMarkup(inlineKeyboardMarkup);
 
-            logger.info("[DeleteNote] Заметка пользователя {} успешно удалена!", userId);
             messageSender.sendMessageToUser(userId, message, telegramBotService);
             flagManager.resetFlag(userId);
         } else {
