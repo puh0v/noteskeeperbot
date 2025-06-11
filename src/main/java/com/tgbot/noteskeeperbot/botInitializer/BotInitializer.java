@@ -21,15 +21,15 @@ public class BotInitializer {
     @PostConstruct
     public void init() {
         try {
-            logger.info("Началась инициализация бота...");
+            logger.info("[BotInitializer] Началась инициализация бота...");
 
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
             botsApi.registerBot(telegramBotService);
         } catch (Exception e) {
-            logger.error("Ошибка при инициализации бота: {}", e.getMessage(), e);
+            logger.error("[BotInitializer] Ошибка при инициализации бота: {}", e.getMessage(), e);
             return;
         }
 
-        logger.info("Инициализация бота прошла успешно!");
+        logger.info("[BotInitializer] Инициализация бота прошла успешно!");
     }
 }
