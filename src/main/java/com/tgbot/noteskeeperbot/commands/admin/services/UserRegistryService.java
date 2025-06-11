@@ -20,11 +20,17 @@ public class UserRegistryService {
 
     public void addToDatabase(Long userId) {
         if (!usersRepository.existsByUserId(userId)) {
-            logger.info("Поступил запрос на добавление нового пользователя {} в БД...", userId);
+            logger.info("[UserRegistryService] Новый пользователь: {} . Начинаю регистрацию...", userId);
 
             UsersEntity usersEntity = new UsersEntity();
             usersEntity.setUserId(userId);
-            usersRepository.save(usersEntity);
+
+            try {
+                usersRepository.save(usersEntity);
+            } catch (Exception e) {
+                logger.error("[UserRegistryService] Произошла ошибка во время регистрации нового пользователя", e.getMessage(), e);
+            }
+            logger.info("[UserRegistryService] Регистрация пользователя {} прошла успешно!", userId);
         }
     }
 
