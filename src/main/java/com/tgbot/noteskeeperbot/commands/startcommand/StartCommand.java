@@ -88,6 +88,7 @@ public class StartCommand implements Commands {
             }
             return;
         }
+        logger.info("[StartCommand] Подготовка изображения для пользователя {} завершена!", userId);
         messageSender.sendImageToUser(userId, image, telegramBotService);
     }
 }
