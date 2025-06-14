@@ -1,11 +1,11 @@
-name: Java CI
+name: Java CI/CD
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,5 +18,23 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Сборка с Maven
+      - name: Сборка проекта
         run: mvn clean package -DskipTests
+
+      - name: Копирование .jar на сервер
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: target/noteskeeperbot.jar
+          target: /home/botuser/noteskeeperbot/
+
+      - name: Перезапуск Telegram-бота
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo systemctl restart noteskeeperbot
