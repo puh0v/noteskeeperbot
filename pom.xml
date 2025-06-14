@@ -15,10 +15,6 @@
     <name>NotesKeeperBot</name>
     <description>A simple Telegram bot for storing personal notes with pagination.</description>
 
-    <build>
-        <finalName>noteskeeperbot</finalName>
-    </build>
-
     <url/>
     <licenses>
         <license/>
@@ -110,6 +106,8 @@
     </dependencies>
 
     <build>
+        <finalName>noteskeeperbot</finalName>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
