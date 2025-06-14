@@ -28,7 +28,8 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: target/noteskeeperbot.jar
+          source: ./target/noteskeeperbot.jar
+          strip_components: 1
           target: /home/botuser/noteskeeperbot/
 
       - name: Перезапуск Telegram-бота
