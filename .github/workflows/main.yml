@@ -1,0 +1,39 @@
+name: Java CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Клонировать репозиторий (локально для GitHub Actions)
+        uses: actions/checkout@v3
+
+      - name: Установить Java (для будущих целей — пусть будет)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Подключение по SSH и деплой через Git + Docker
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
+            export BOT_NAME=${{ secrets.BOT_NAME }}
+            export ADMIN_ID=${{ secrets.ADMIN_ID }}
+            export DB_URL=${{ secrets.DB_URL }}
+            export DB_USERNAME=${{ secrets.DB_USERNAME }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+            cd /home/botuser/noteskeeperbot
+            git pull origin main
+            docker-compose down
+            docker-compose up -d --build
