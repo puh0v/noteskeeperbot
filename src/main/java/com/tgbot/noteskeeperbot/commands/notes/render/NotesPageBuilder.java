@@ -17,6 +17,7 @@ import java.util.List;
 
 @Component
 public class NotesPageBuilder {
+
     private final CallbackButtons callbackButtons;
     private final NoteService noteService;
     private static final Logger logger = LoggerFactory.getLogger(NotesPageBuilder.class);
@@ -26,7 +27,8 @@ public class NotesPageBuilder {
         this.noteService = noteService;
     }
 
-    // --------------- Если у юзера нет заметок ----------------------
+
+    /** Если у юзера нет заметок */
     public SendMessage getNotesIsEmptyMessage(Long userId) {
         logger.info("[NotesPageBuilder] Формирую сообщение с уведомлением об отсутствии заметок для пользователя {} ...", userId);
 
@@ -44,7 +46,8 @@ public class NotesPageBuilder {
         return message;
     }
 
-    // --------------- Получаем текст и кнопки для пагинации в одном объекте ----------------------
+
+    /** Получаем текст и кнопки для пагинации в одном объекте */
     public NotesPageDTO getFieldsFromDTO(Long userId, int page, String pagePrefix, NotesViewMode notesViewMode) {
         logger.info("[NotesPageBuilder] Подготавливаю сообщение со списком заметок и пагинацией для пользователя {} ...", userId);
 

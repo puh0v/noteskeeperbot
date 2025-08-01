@@ -1,7 +1,7 @@
 package com.tgbot.noteskeeperbot.commands;
 
 
-import com.tgbot.noteskeeperbot.mainservices.bot.TelegramBotService;
+import com.tgbot.noteskeeperbot.mainservices.receiver.TelegramBotService;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 public interface Commands {

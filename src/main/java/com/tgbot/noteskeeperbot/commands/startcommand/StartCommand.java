@@ -2,7 +2,7 @@ package com.tgbot.noteskeeperbot.commands.startcommand;
 
 
 import com.tgbot.noteskeeperbot.commands.Commands;
-import com.tgbot.noteskeeperbot.mainservices.bot.TelegramBotService;
+import com.tgbot.noteskeeperbot.mainservices.receiver.TelegramBotService;
 import com.tgbot.noteskeeperbot.commands.notes.ui.CallbackButtons;
 import com.tgbot.noteskeeperbot.mainservices.messagesender.MessageSender;
 import org.springframework.beans.factory.annotation.Value;

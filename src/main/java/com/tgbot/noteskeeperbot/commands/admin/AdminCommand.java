@@ -3,7 +3,7 @@ package com.tgbot.noteskeeperbot.commands.admin;
 import com.tgbot.noteskeeperbot.database.entity.UsersEntity;
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.commands.FlagManager;
-import com.tgbot.noteskeeperbot.mainservices.bot.TelegramBotService;
+import com.tgbot.noteskeeperbot.mainservices.receiver.TelegramBotService;
 import com.tgbot.noteskeeperbot.commands.admin.services.UserRegistryService;
 import com.tgbot.noteskeeperbot.mainservices.messagesender.MessageSender;
 import org.springframework.beans.factory.annotation.Value;

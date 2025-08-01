@@ -2,7 +2,7 @@ package com.tgbot.noteskeeperbot.mainservices.commands;
 
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.commands.FlagManager;
-import com.tgbot.noteskeeperbot.mainservices.bot.TelegramBotService;
+import com.tgbot.noteskeeperbot.mainservices.receiver.TelegramBotService;
 import com.tgbot.noteskeeperbot.commands.admin.services.UserRegistryService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -47,7 +47,7 @@ public class CommandsService {
 
         userRegistry.addToDatabase(userId);
 
-        // --------------- Обработка команды через Callback или текст ----------------------
+        // --------------- Обработка команды через Callback или ручной ввод ----------------------
         if (commandsMap.containsKey(userMessage)) {
             logger.info("[CommandsService] Поступила команда от пользователя {}. Вызываю соответствующий класс...", userId);
 
@@ -79,7 +79,6 @@ public class CommandsService {
     }
 
 
-    // --------------- Геттеры ----------------------
     public Optional<Long> getUserId(Update update) {
         if (update.hasMessage()) {
             return Optional.of(update.getMessage().getFrom().getId());

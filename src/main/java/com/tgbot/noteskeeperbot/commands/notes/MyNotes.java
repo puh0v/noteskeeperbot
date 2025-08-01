@@ -5,7 +5,7 @@ import com.tgbot.noteskeeperbot.commands.notes.render.NotesPageBuilder;
 import com.tgbot.noteskeeperbot.commands.notes.ui.NotesViewMode;
 import com.tgbot.noteskeeperbot.database.entity.NotesEntity;
 import com.tgbot.noteskeeperbot.commands.Commands;
-import com.tgbot.noteskeeperbot.mainservices.bot.TelegramBotService;
+import com.tgbot.noteskeeperbot.mainservices.receiver.TelegramBotService;
 import com.tgbot.noteskeeperbot.commands.notes.services.NoteService;
 import com.tgbot.noteskeeperbot.commands.notes.ui.CallbackButtons;
 import com.tgbot.noteskeeperbot.mainservices.messagesender.MessageSender;

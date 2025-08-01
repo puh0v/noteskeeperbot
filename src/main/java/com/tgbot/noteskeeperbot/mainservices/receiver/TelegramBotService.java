@@ -1,4 +1,4 @@
-package com.tgbot.noteskeeperbot.mainservices.bot;
+package com.tgbot.noteskeeperbot.mainservices.receiver;
 
 import com.tgbot.noteskeeperbot.config.BotConfig;
 import com.tgbot.noteskeeperbot.mainservices.commands.CommandsService;
@@ -34,6 +34,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+
         if (update.hasMessage()) {
             try {
                 logger.info("[TelegramBotService] Пришло сообщение от пользователя...");
@@ -41,6 +42,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
             } catch (Exception e) {
                 logger.error("[TelegramBotService] Не удалось принять и обработать сообщение пользователя", e);
             }
+
         } else if (update.hasCallbackQuery()) {
             AnswerCallbackQuery answer = new AnswerCallbackQuery();
             answer.setCallbackQueryId(update.getCallbackQuery().getId());
