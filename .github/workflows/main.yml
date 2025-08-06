@@ -35,5 +35,6 @@ jobs:
 
             cd /home/botuser/noteskeeperbot
             git pull origin main
+            ./mvnw clean package
             docker-compose down
             docker-compose up -d --build
