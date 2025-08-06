@@ -1,4 +1,4 @@
-package com.tgbot.noteskeeperbot.commands.notes.services;
+package com.tgbot.noteskeeperbot.services.noteservice;
 
 import com.tgbot.noteskeeperbot.database.entity.NotesEntity;
 import com.tgbot.noteskeeperbot.database.repository.NoteRepository;

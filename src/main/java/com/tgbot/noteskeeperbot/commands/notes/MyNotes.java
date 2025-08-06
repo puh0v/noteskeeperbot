@@ -6,7 +6,7 @@ import com.tgbot.noteskeeperbot.commands.notes.ui.NotesViewMode;
 import com.tgbot.noteskeeperbot.database.entity.NotesEntity;
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.services.receiver.TelegramBotService;
-import com.tgbot.noteskeeperbot.commands.notes.services.NoteService;
+import com.tgbot.noteskeeperbot.services.noteservice.NoteService;
 import com.tgbot.noteskeeperbot.commands.notes.ui.CallbackButtons;
 import com.tgbot.noteskeeperbot.services.messagesender.MessageSender;
 import org.springframework.stereotype.Component;
