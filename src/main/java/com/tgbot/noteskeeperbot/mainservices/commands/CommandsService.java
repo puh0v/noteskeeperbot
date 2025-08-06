@@ -19,14 +19,14 @@ import java.util.Optional;
 public class CommandsService {
 
     private final FlagManager flagManager;
-    private final UserRegistrationService userRegistry;
+    private final UserRegistrationService userRegistrationService;
     private static final Logger logger = LoggerFactory.getLogger(CommandsService.class);
 
     private final Map<String, Commands> commandsMap = new HashMap<>();
 
-    public CommandsService(FlagManager flagManager, UserRegistrationService userRegistry, List<Commands> commands) {
+    public CommandsService(FlagManager flagManager, UserRegistrationService userRegistrationService, List<Commands> commands) {
         this.flagManager = flagManager;
-        this.userRegistry = userRegistry;
+        this.userRegistrationService = userRegistrationService;
         for (Commands command : commands) {
             commandsMap.put(command.getCommandName(), command);
         }
@@ -45,7 +45,7 @@ public class CommandsService {
         Long userId = optUserId.get();
         String userMessage = optUserMessage.get();
 
-        userRegistry.addToDatabase(userId);
+        userRegistrationService.addToDatabase(userId);
 
         // --------------- Обработка команды через Callback или ручной ввод ----------------------
         if (commandsMap.containsKey(userMessage)) {
