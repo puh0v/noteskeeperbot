@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import java.io.InputStream;
 
 @Component
-public class ImageSender {
+public class ImageLoader {
 
     public InputStream getImagesStream(String path) {
         return getClass().getClassLoader().getResourceAsStream(path);
