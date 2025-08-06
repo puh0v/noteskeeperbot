@@ -1,4 +1,4 @@
-package com.tgbot.noteskeeperbot.commands.startcommand.ui;
+package com.tgbot.noteskeeperbot.services.messagesender;
 
 import org.springframework.stereotype.Component;
 import java.io.InputStream;
