@@ -4,7 +4,7 @@ import com.tgbot.noteskeeperbot.database.entity.UsersEntity;
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.commands.FlagManager;
 import com.tgbot.noteskeeperbot.services.receiver.TelegramBotService;
-import com.tgbot.noteskeeperbot.services.UserRegistration.UserRegistrationService;
+import com.tgbot.noteskeeperbot.services.registration.UserRegistrationService;
 import com.tgbot.noteskeeperbot.services.messagesender.MessageSender;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
