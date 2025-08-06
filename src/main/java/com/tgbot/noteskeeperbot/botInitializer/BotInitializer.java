@@ -1,6 +1,6 @@
 package com.tgbot.noteskeeperbot.botInitializer;
 
-import com.tgbot.noteskeeperbot.mainservices.receiver.TelegramBotService;
+import com.tgbot.noteskeeperbot.services.receiver.TelegramBotService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.TelegramBotsApi;

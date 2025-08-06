@@ -1,7 +1,7 @@
-package com.tgbot.noteskeeperbot.mainservices.receiver;
+package com.tgbot.noteskeeperbot.services.receiver;
 
 import com.tgbot.noteskeeperbot.config.BotConfig;
-import com.tgbot.noteskeeperbot.mainservices.commands.CommandsService;
+import com.tgbot.noteskeeperbot.services.commands.CommandsService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;

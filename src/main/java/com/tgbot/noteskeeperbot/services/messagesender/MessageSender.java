@@ -1,6 +1,6 @@
-package com.tgbot.noteskeeperbot.mainservices.messagesender;
+package com.tgbot.noteskeeperbot.services.messagesender;
 
-import com.tgbot.noteskeeperbot.mainservices.receiver.TelegramBotService;
+import com.tgbot.noteskeeperbot.services.receiver.TelegramBotService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;

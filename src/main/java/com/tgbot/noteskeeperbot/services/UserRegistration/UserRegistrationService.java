@@ -1,4 +1,4 @@
-package com.tgbot.noteskeeperbot.mainservices.UserRegistration;
+package com.tgbot.noteskeeperbot.services.UserRegistration;
 
 import com.tgbot.noteskeeperbot.database.entity.UsersEntity;
 import com.tgbot.noteskeeperbot.database.repository.UsersRepository;

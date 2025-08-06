@@ -1,9 +1,9 @@
-package com.tgbot.noteskeeperbot.mainservices.commands;
+package com.tgbot.noteskeeperbot.services.commands;
 
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.commands.FlagManager;
-import com.tgbot.noteskeeperbot.mainservices.receiver.TelegramBotService;
-import com.tgbot.noteskeeperbot.mainservices.UserRegistration.UserRegistrationService;
+import com.tgbot.noteskeeperbot.services.receiver.TelegramBotService;
+import com.tgbot.noteskeeperbot.services.UserRegistration.UserRegistrationService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
