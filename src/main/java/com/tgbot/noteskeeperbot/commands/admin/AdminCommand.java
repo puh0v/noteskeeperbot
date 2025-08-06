@@ -4,7 +4,7 @@ import com.tgbot.noteskeeperbot.database.entity.UsersEntity;
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.commands.FlagManager;
 import com.tgbot.noteskeeperbot.mainservices.receiver.TelegramBotService;
-import com.tgbot.noteskeeperbot.commands.admin.services.UserRegistryService;
+import com.tgbot.noteskeeperbot.mainservices.UserRegistration.UserRegistrationService;
 import com.tgbot.noteskeeperbot.mainservices.messagesender.MessageSender;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -23,12 +23,12 @@ public class AdminCommand implements Commands {
 
     @Value("${admin.id}")
     private long adminId;
-    private final UserRegistryService userRegistry;
+    private final UserRegistrationService userRegistry;
     private final FlagManager flagManager;
     private final MessageSender messageSender;
     private static final Logger logger = LoggerFactory.getLogger(AdminCommand.class);
 
-    public AdminCommand(UserRegistryService userRegistry, FlagManager flagManager, MessageSender messageSender) {
+    public AdminCommand(UserRegistrationService userRegistry, FlagManager flagManager, MessageSender messageSender) {
         this.userRegistry = userRegistry;
         this.flagManager = flagManager;
         this.messageSender = messageSender;

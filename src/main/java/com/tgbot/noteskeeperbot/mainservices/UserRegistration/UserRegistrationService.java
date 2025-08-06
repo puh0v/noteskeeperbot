@@ -1,4 +1,4 @@
-package com.tgbot.noteskeeperbot.commands.admin.services;
+package com.tgbot.noteskeeperbot.mainservices.UserRegistration;
 
 import com.tgbot.noteskeeperbot.database.entity.UsersEntity;
 import com.tgbot.noteskeeperbot.database.repository.UsersRepository;
@@ -9,12 +9,12 @@ import org.slf4j.Logger;
 import java.util.List;
 
 @Service
-public class UserRegistryService {
+public class UserRegistrationService {
 
     private final UsersRepository usersRepository;
-    private static final Logger logger = LoggerFactory.getLogger(UserRegistryService.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserRegistrationService.class);
 
-    public UserRegistryService(UsersRepository usersRepository) {
+    public UserRegistrationService(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
     }
 

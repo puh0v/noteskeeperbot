@@ -3,7 +3,7 @@ package com.tgbot.noteskeeperbot.mainservices.commands;
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.commands.FlagManager;
 import com.tgbot.noteskeeperbot.mainservices.receiver.TelegramBotService;
-import com.tgbot.noteskeeperbot.commands.admin.services.UserRegistryService;
+import com.tgbot.noteskeeperbot.mainservices.UserRegistration.UserRegistrationService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -19,12 +19,12 @@ import java.util.Optional;
 public class CommandsService {
 
     private final FlagManager flagManager;
-    private final UserRegistryService userRegistry;
+    private final UserRegistrationService userRegistry;
     private static final Logger logger = LoggerFactory.getLogger(CommandsService.class);
 
     private final Map<String, Commands> commandsMap = new HashMap<>();
 
-    public CommandsService(FlagManager flagManager, UserRegistryService userRegistry, List<Commands> commands) {
+    public CommandsService(FlagManager flagManager, UserRegistrationService userRegistry, List<Commands> commands) {
         this.flagManager = flagManager;
         this.userRegistry = userRegistry;
         for (Commands command : commands) {
