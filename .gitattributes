@@ -1,2 +1,4 @@
-/mvnw text eol=lf
-*.cmd text eol=crlf
+*.yml text eol=lf working-tree-encoding=UTF-8
+*.yaml text eol=lf working-tree-encoding=UTF-8
+
+* text=auto eol=lf
