@@ -2,8 +2,7 @@ name: Deploy NotesKeeperBot
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -27,26 +26,26 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Экспорт переменных окружения"
-            export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
-            export BOT_NAME=${{ secrets.BOT_NAME }}
-            export ADMIN_ID=${{ secrets.ADMIN_ID }}
-            export DB_URL=${{ secrets.DB_URL }}
-            export DB_USERNAME=${{ secrets.DB_USERNAME }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-
-            echo "Переход в папку проекта"
+            set -e
             cd /home/botuser/noteskeeperbot
 
-            echo "Получение свежего кода с GitHub"
+            echo "Получение свежего кода"
             git pull origin main
 
-            echo "Установка прав на mvnw"
-            chmod +x ./mvnw
+            echo "Создаю .env для docker compose"
+            cat > .env <<EOF
+            BOT_TOKEN=${{ secrets.BOT_TOKEN }}
+            BOT_NAME=${{ secrets.BOT_NAME }}
+            ADMIN_ID=${{ secrets.ADMIN_ID }}
+            DB_URL=${{ secrets.DB_URL }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            EOF
 
-            echo "Сборка проекта"
-            ./mvnw clean package -DskipTests
+            echo "Сборка и перезапуск контейнера"
+            docker compose down
+            docker compose build --no-cache
+            docker compose up -d
 
-            echo "Перезапуск Docker-контейнера"
-            docker-compose down
-            docker-compose up -d --build
+            docker compose ps
+
