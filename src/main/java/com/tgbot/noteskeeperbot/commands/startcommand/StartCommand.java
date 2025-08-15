@@ -2,10 +2,10 @@ package com.tgbot.noteskeeperbot.commands.startcommand;
 
 
 import com.tgbot.noteskeeperbot.commands.Commands;
+import com.tgbot.noteskeeperbot.config.BotConfig;
 import com.tgbot.noteskeeperbot.services.receiver.TelegramBotService;
 import com.tgbot.noteskeeperbot.commands.notes.ui.CallbackButtons;
 import com.tgbot.noteskeeperbot.services.messagesender.MessageSender;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -25,15 +25,14 @@ public class StartCommand implements Commands {
 
     private final CallbackButtons callBackButtons;
     private final MessageSender messageSender;
+    private final BotConfig botConfig;
     private static final Logger logger = LoggerFactory.getLogger(StartCommand.class);
 
-    public StartCommand(CallbackButtons callBackButtons, MessageSender messageSender) {
+    public StartCommand(CallbackButtons callBackButtons, MessageSender messageSender, BotConfig botConfig) {
         this.callBackButtons = callBackButtons;
         this.messageSender = messageSender;
+        this.botConfig = botConfig;
     }
-
-    @Value("${bot.name}")
-    private String botName;
 
     @Override
     public String getCommandName() {
@@ -44,11 +43,10 @@ public class StartCommand implements Commands {
     public void execute(Long userId, String userMessage, Update update, TelegramBotService telegramBotService) {
         logger.info("[StartCommand] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
 
-        String text = "\uD83D\uDCDD Добро пожаловать в Notes Keeper Bot! \uD83D\uDCDD\n\n" +
+        String text = "\uD83D\uDCDD Добро пожаловать в " + botConfig.getBotUsername() + "! \uD83D\uDCDD\n\n" +
                 "⚠\uFE0F Бот пока в стадии разработки, многие функции ещё в процессе реализации.\n" +
                 "\uD83D\uDCDA Проект создан в образовательных целях, а также для моего портфолио.\n\n" +
                 "\uD83D\uDC64 Разработкой занимается: @puh0v";
-
 
         InlineKeyboardButton myNotesButton = callBackButtons.myNotesButton();
         InlineKeyboardButton addNoteButton = callBackButtons.addNoteButton();
@@ -66,10 +64,10 @@ public class StartCommand implements Commands {
 
         logger.info("[StartCommand] Начинаю подготовку изображения для пользователя {} ...", userId);
         try {
-            InputStream imageStream = getClass().getClassLoader().getResourceAsStream("static/images/paper.png");
+            InputStream imageStream = getClass().getClassLoader().getResourceAsStream("images/paper.png");
 
             if (imageStream == null) {
-                throw new RuntimeException("Файл \"static/images/paper.png\" не найден");
+                throw new RuntimeException("Файл \"/images/paper.png\" не найден");
             }
 
             image.setPhoto(new InputFile(imageStream, "paper.png"));
