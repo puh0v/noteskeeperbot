@@ -43,11 +43,25 @@ public class StartCommand implements Commands {
     public void execute(Long userId, String userMessage, Update update, TelegramBotService telegramBotService) {
         logger.info("[StartCommand] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
 
+        prepareMessage(telegramBotService, userId);
+    }
+
+
+    private void prepareMessage(TelegramBotService telegramBotService, Long userId) {
+        String text = welcomeText();
+        InlineKeyboardMarkup inlineKeyboardMarkup = prepareButtons();
+        sendMessage(telegramBotService, userId, text, inlineKeyboardMarkup);
+    }
+
+    private String welcomeText() {
         String text = "\uD83D\uDCDD Добро пожаловать в " + botConfig.getBotUsername() + "! \uD83D\uDCDD\n\n" +
                 "⚠\uFE0F Бот пока в стадии разработки, многие функции ещё в процессе реализации.\n" +
                 "\uD83D\uDCDA Проект создан в образовательных целях, а также для моего портфолио.\n\n" +
                 "\uD83D\uDC64 Разработкой занимается: @puh0v";
+        return text;
+    }
 
+    private InlineKeyboardMarkup prepareButtons() {
         InlineKeyboardButton myNotesButton = callBackButtons.myNotesButton();
         InlineKeyboardButton addNoteButton = callBackButtons.addNoteButton();
 
@@ -58,6 +72,11 @@ public class StartCommand implements Commands {
 
         List<List<InlineKeyboardButton>> rows = List.of(myNotesRow, addNoteRow);
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup(rows);
+
+        return inlineKeyboardMarkup;
+    }
+
+    private void sendMessage(TelegramBotService telegramBotService, Long userId, String text, InlineKeyboardMarkup inlineKeyboardMarkup) {
 
         SendPhoto image = new SendPhoto();
         image.setChatId(userId.toString());
@@ -86,6 +105,7 @@ public class StartCommand implements Commands {
             }
             return;
         }
+
         logger.info("[StartCommand] Подготовка изображения для пользователя {} завершена!", userId);
         messageSender.sendImageToUser(userId, image, telegramBotService);
     }
