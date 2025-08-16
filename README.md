@@ -10,7 +10,7 @@
 - Логгирование (SLF4J + Logback)
 
 ## Используемые технологии 
-
+ 
 - Java 17
 - Spring Boot
 - PostgreSQL + JPA/Hibernate
