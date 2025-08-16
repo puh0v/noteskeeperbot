@@ -15,7 +15,7 @@
 - Spring Boot
 - PostgreSQL + JPA/Hibernate
 - TelegramBots API
-- SLF4J + Logback
+- SLF4J + Logback 
 
 ## Установка и запуск 
 
