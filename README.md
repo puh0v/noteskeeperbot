@@ -17,7 +17,7 @@
 - TelegramBots API
 - SLF4J + Logback
 
-## Установка и запуск
+## Установка и запуск 
 
 Приложение запускается как Spring Boot-приложение (`.jar`) и подключается к PostgreSQL.  
 Для запуска необходимо указать Telegram-токен и параметры БД в файле `application.properties`.
