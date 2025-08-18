@@ -6,7 +6,7 @@
 
 - Просмотр, добавление, удаление и пересылка заметок 
 - Поддержка пагинации
-- Inline-кнопки
+- Inline-кнопки 
 - Логгирование (SLF4J + Logback)
 
 ## Используемые технологии 
@@ -15,9 +15,9 @@
 - Spring Boot
 - PostgreSQL + JPA/Hibernate
 - TelegramBots API
-- SLF4J + Logback
+- SLF4J + Logback 
 
-## Установка и запуск
+## Установка и запуск 
 
 Приложение запускается как Spring Boot-приложение (`.jar`) и подключается к PostgreSQL.  
 Для запуска необходимо указать Telegram-токен и параметры БД в файле `application.properties`.
