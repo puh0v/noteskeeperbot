@@ -132,7 +132,6 @@ public class MyNotes implements Commands {
 
 
     private InlineKeyboardMarkup getPaginationAndNotes(int page, NotesPageDTO notesPageDTO) {
-
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>(notesPageDTO.getKeyboard());
 
         if (notesPageDTO.getKeyboard().isEmpty() && page > 0) {
