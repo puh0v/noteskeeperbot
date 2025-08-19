@@ -29,11 +29,19 @@ public class NotesPageBuilder {
 
 
     /** Если у юзера нет заметок */
-    public SendMessage getNotesIsEmptyMessage(Long userId) {
+    public SendMessage getEmptyMessage(Long userId) {
         logger.info("[NotesPageBuilder] Формирую сообщение с уведомлением об отсутствии заметок для пользователя {} ...", userId);
 
         SendMessage message = new SendMessage(userId.toString(), "Ваш список заметок пуст");
 
+        InlineKeyboardMarkup inlineKeyboardMarkup = getButtonsForEmptyMessage();
+        message.setReplyMarkup(inlineKeyboardMarkup);
+
+        logger.info("[NotesPageBuilder] Уведомление об отсутствии заметок для пользователя {} готово!", userId);
+        return message;
+    }
+
+    private InlineKeyboardMarkup getButtonsForEmptyMessage() {
         InlineKeyboardButton mainMenu = callbackButtons.mainMenuButton();
         List<InlineKeyboardButton> mainMenuButton = List.of(mainMenu);
         List<List<InlineKeyboardButton>> rows = List.of(mainMenuButton);
@@ -41,20 +49,31 @@ public class NotesPageBuilder {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         inlineKeyboardMarkup.setKeyboard(rows);
 
-        message.setReplyMarkup(inlineKeyboardMarkup);
-        logger.info("[NotesPageBuilder] Уведомление об отсутствии заметок для пользователя {} готово!", userId);
-        return message;
+        return inlineKeyboardMarkup;
     }
 
 
     /** Получаем текст и кнопки для пагинации в одном объекте */
     public NotesPageDTO getFieldsFromDTO(Long userId, int page, String pagePrefix, NotesViewMode notesViewMode) {
-        logger.info("[NotesPageBuilder] Подготавливаю сообщение со списком заметок и пагинацией для пользователя {} ...", userId);
+        logger.info("[NotesPageBuilder] Формирую DTO для пользователя {} ...", userId);
+        List<String> listOfPages = getPagesWithNotes(userId, page, notesViewMode);
 
-        // --------------- Рендерим текст ----------------------
-        List<NotesEntity> notes = noteService.getAllUserNotes(userId);
-        List<String> pagesList = new ArrayList<>();
+        if (page < 0 || page >= listOfPages.size()) {
+            return new NotesPageDTO("Такой страницы больше не существует. Возможно, вы удалили заметки.", List.of());
+        }
 
+        List<List<InlineKeyboardButton>> fullKeyboard = getPaginationButtons(userId, page, pagePrefix, listOfPages);
+
+        logger.info("[NotesPageBuilder] DTO для пользователя {} сформировано!", userId);
+        return new NotesPageDTO(listOfPages.get(page), fullKeyboard);
+    }
+
+
+    private List<String> getPagesWithNotes(Long userId, int page, NotesViewMode notesViewMode) {
+        logger.info("[NotesPageBuilder] Подготавливаю страницы со списком заметок для пользователя {} ...", userId);
+
+        List<NotesEntity> repository = noteService.getAllUserNotes(userId);
+        List<String> listOfPages = new ArrayList<>();
 
         int i = 1;
         int notesOnPage = 0;
@@ -69,10 +88,10 @@ public class NotesPageBuilder {
                 currentPageSB.append("\uD83D\uDCD4 Ваши заметки \uD83D\uDCD4\n\n\n");
             }
 
-            for (NotesEntity note : notes) {
+            for (NotesEntity note : repository) {
                 noteBlock = "\uD83D\uDCCB  " + note.getNoteText() + "\n_____________________________________\n\n";
                 if (currentPageSB.length() + noteBlock.length() > 4000 || notesOnPage >= 10) {
-                    pagesList.add(currentPageSB.toString());
+                    listOfPages.add(currentPageSB.toString());
                     currentPageSB = new StringBuilder();
                     notesOnPage = 0;
                 }
@@ -81,10 +100,10 @@ public class NotesPageBuilder {
             }
 
         } else {
-            for (NotesEntity note : notes) {
+            for (NotesEntity note : repository) {
                 noteBlock = "\uD83D\uDCCB  " + i++ + ")  " + note.getNoteText() + "\n_____________________________________\n\n";
                 if (currentPageSB.length() + noteBlock.length() > 4000 || notesOnPage >= 10) {
-                    pagesList.add(currentPageSB.toString());
+                    listOfPages.add(currentPageSB.toString());
                     currentPageSB = new StringBuilder();
                     notesOnPage = 0;
                 }
@@ -92,22 +111,21 @@ public class NotesPageBuilder {
                 notesOnPage++;
             }
         }
-        logger.info("[NotesPageBuilder] Текстовое сообщение для пользователя {} сформировано!", userId);
+        logger.info("[NotesPageBuilder] Текстовое сообщение для пользователя {} готово!", userId);
 
         if (!currentPageSB.toString().isBlank()) {
-            pagesList.add(currentPageSB.toString());
+            listOfPages.add(currentPageSB.toString());
         }
 
+        return listOfPages;
+    }
 
-        // --------------- Рендерим кнопки ----------------------
+
+    private List<List<InlineKeyboardButton>> getPaginationButtons(Long userId, int page, String pagePrefix, List<String> listOfPages) {
         logger.info("[NotesPageBuilder] Создаю кнопки пагинации для пользователя {} ...", userId);
 
-        List<List<InlineKeyboardButton>> fullKeyboard = new ArrayList<>();
         List<InlineKeyboardButton> paginationRow = new ArrayList<>();
-
-        if (page < 0 || page >= pagesList.size()) {
-            return new NotesPageDTO("Такой страницы больше не существует. Возможно, вы удалили заметки.", List.of());
-        }
+        List<List<InlineKeyboardButton>> fullKeyboard = new ArrayList<>();
 
         if (page > 0) {
             InlineKeyboardButton prev = new InlineKeyboardButton("⬅\uFE0F Предыдущая");
@@ -115,12 +133,12 @@ public class NotesPageBuilder {
             paginationRow.add(prev);
         }
 
-        if ((page == 0) && (pagesList.size() > 1)) {
+        if ((page == 0) && (listOfPages.size() > 1)) {
             InlineKeyboardButton next = new InlineKeyboardButton("Следующая страница ➡\uFE0F");
             next.setCallbackData(pagePrefix + (page + 1));
             paginationRow.add(next);
 
-        } else if ((page > 0) && (page < (pagesList.size() - 1))) {
+        } else if ((page > 0) && (page < (listOfPages.size() - 1))) {
             InlineKeyboardButton next = new InlineKeyboardButton("Следующая ➡\uFE0F");
             next.setCallbackData(pagePrefix + (page + 1));
             paginationRow.add(next);
@@ -131,7 +149,6 @@ public class NotesPageBuilder {
         }
         logger.info("[NotesPageBuilder] Кнопки пагинации для сообщения пользователю {} созданы!", userId);
 
-        logger.info("[NotesPageBuilder] Сообщение со списком заметок и пагинацией для пользователя {} готово!", userId);
-        return new NotesPageDTO(pagesList.get(page), fullKeyboard);
+        return fullKeyboard;
     }
 }

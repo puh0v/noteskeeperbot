@@ -106,7 +106,7 @@ public class MyNotes implements Commands {
     }
 
     private void sendEmptyPage(MyNotesDTO myNotesDTO, SendMessage message) {
-        message = notesPageBuilder.getNotesIsEmptyMessage(myNotesDTO.getUserId());
+        message = notesPageBuilder.getEmptyMessage(myNotesDTO.getUserId());
         messageSender.sendMessageToUser(myNotesDTO.getUserId(), message, myNotesDTO.getTelegramBotService());
     }
 
