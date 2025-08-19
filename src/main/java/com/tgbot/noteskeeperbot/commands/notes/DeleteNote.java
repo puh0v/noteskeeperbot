@@ -60,7 +60,7 @@ public class DeleteNote implements Commands {
             if (notes.isEmpty()) {
                 logger.info("[DeleteNote] Список заметок пользователя {} пуст.", userId);
 
-                SendMessage message = notesPageBuilder.getNotesIsEmptyMessage(userId);
+                SendMessage message = notesPageBuilder.getEmptyMessage(userId);
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
 
             } else {
