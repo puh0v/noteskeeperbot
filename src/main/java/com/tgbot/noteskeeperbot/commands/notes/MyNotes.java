@@ -57,56 +57,57 @@ public class MyNotes implements Commands {
 
     private void prepareMessage(MyNotesDTO myNotesDTO) {
         Long userId = myNotesDTO.getUserId();
-
         List<NotesEntity> notes = noteService.getAllUserNotes(userId);
-        SendMessage message = new SendMessage();
 
         if (myNotesDTO.getUserMessage().equals(getCommandName())) {
             logger.info("[MyNotes] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
-            handleCommand(notes, myNotesDTO, message);
+            handleCommand(notes, myNotesDTO);
         }
         else if (myNotesDTO.getUpdate().hasCallbackQuery()) {
             logger.info("[MyNotes] Поступил Callback-запрос от пользователя {} ...", userId);
-            handleCallbackQuery(notes, myNotesDTO, message);
+            handleCallbackQuery(myNotesDTO);
         }
     }
 
 
-    private void handleCommand(List<NotesEntity> notes, MyNotesDTO myNotesDTO, SendMessage message) {
+    private void handleCommand(List<NotesEntity> notes, MyNotesDTO myNotesDTO) {
         Long userId = myNotesDTO.getUserId();
 
         if (notes.isEmpty()) {
             logger.info("[MyNotes] Список заметок пользователя {} пуст.", userId);
 
-            sendEmptyPage(myNotesDTO, message);
+            sendEmptyPage(myNotesDTO);
         } else {
             logger.info("[MyNotes] Подготавливаю список заметок для пользователя {} ...", userId);
 
-            sendReadyPage(myNotesDTO, 0, message);
+            sendReadyPage(myNotesDTO, 0);
         }
     }
 
-    private void handleCallbackQuery(List<NotesEntity> notes, MyNotesDTO myNotesDTO, SendMessage message) {
+    private void handleCallbackQuery(MyNotesDTO myNotesDTO) {
         Long userId = myNotesDTO.getUserId();
         String data = myNotesDTO.getUpdate().getCallbackQuery().getData();
+        SendMessage message = new SendMessage();
 
         if (data.startsWith(getPagePrefix())) {
             logger.info("[MyNotes] Пользователь {} перелистывает страницу с заметками...", userId);
             int page = Integer.parseInt(data.replace(getPagePrefix(), ""));
 
-            message = getReadyPage(myNotesDTO, page,message);
+            message = getReadyPage(myNotesDTO, page, message);
             messageSender.sendMessageToUser(userId, message, myNotesDTO.getTelegramBotService());
         }
     }
 
 
-    private void sendReadyPage(MyNotesDTO myNotesDTO, int page, SendMessage message) {
+    private void sendReadyPage(MyNotesDTO myNotesDTO, int page) {
+        SendMessage message = new SendMessage();
+
         message = getReadyPage(myNotesDTO, page, message);
         messageSender.sendMessageToUser(myNotesDTO.getUserId(), message, myNotesDTO.getTelegramBotService());
     }
 
-    private void sendEmptyPage(MyNotesDTO myNotesDTO, SendMessage message) {
-        message = notesPageBuilder.getEmptyMessage(myNotesDTO.getUserId());
+    private void sendEmptyPage(MyNotesDTO myNotesDTO) {
+        SendMessage message = notesPageBuilder.getEmptyMessage(myNotesDTO.getUserId());
         messageSender.sendMessageToUser(myNotesDTO.getUserId(), message, myNotesDTO.getTelegramBotService());
     }
 
