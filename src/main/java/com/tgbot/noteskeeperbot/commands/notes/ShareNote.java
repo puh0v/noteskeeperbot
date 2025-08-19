@@ -60,7 +60,7 @@ public class ShareNote implements Commands {
             if (notes.isEmpty()) {
                 logger.info("[ShareNote] Список заметок пользователя {} пуст.", userId);
 
-                SendMessage message = notesPageBuilder.getNotesIsEmptyMessage(userId);
+                SendMessage message = notesPageBuilder.getEmptyMessage(userId);
 
                 messageSender.sendMessageToUser(userId, message, telegramBotService);
             } else {
