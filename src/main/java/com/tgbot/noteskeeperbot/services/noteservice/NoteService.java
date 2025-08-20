@@ -14,7 +14,13 @@ public class NoteService {
         this.noteRepository = noteRepository;
     }
 
+
     public List<NotesEntity> getAllUserNotes(Long userId) {
         return noteRepository.findAllByUserId(userId);
+    }
+
+    public void deleteNote(Long userId, int index) {
+        List<NotesEntity> notes = getAllUserNotes(userId);
+        noteRepository.delete(notes.get(index));
     }
 }
