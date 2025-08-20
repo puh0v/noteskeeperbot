@@ -60,14 +60,11 @@ public class DeleteNote implements Commands {
     private void prepareMessage(TelegramBotService telegramBotService, Update update, Long userId, String userMessage) {
         if (userMessage.equals(getCommandName())) {
             handleCommand(telegramBotService, userId);
-            return;
 
-        } else if (update.hasCallbackQuery()) {
-            handleCallbackQuery(telegramBotService, userId, update);
-            return;
-        }
+        } else if (update.hasCallbackQuery() && userMessage.startsWith(getPagePrefix())) {
+            handleCallbackQuery(telegramBotService, userId, update, userMessage);
 
-        if (flagManager.flagHasThisCommand(userId, getCommandName())) {
+        } else if (flagManager.flagHasThisCommand(userId, getCommandName())) {
             handleDeleteNoteInput(telegramBotService, userId, userMessage);
         }
     }
@@ -96,7 +93,7 @@ public class DeleteNote implements Commands {
     }
 
     /** Если пользователь перелистывает страницы, prepareMessage() обратится к этому методу*/
-    private void handleCallbackQuery(TelegramBotService telegramBotService, Long userId, Update update) {
+    private void handleCallbackQuery(TelegramBotService telegramBotService, Long userId, Update update, String userMessage) {
         logger.info("[DeleteNote] Поступил Callback-запрос от пользователя {} ...", userId);
         String data = update.getCallbackQuery().getData();
 
@@ -107,6 +104,7 @@ public class DeleteNote implements Commands {
             SendMessage message = getReadyPageWithNotes(userId, page, getPagePrefix());
 
             messageSender.sendMessageToUser(userId, message, telegramBotService);
+
         }
     }
 
