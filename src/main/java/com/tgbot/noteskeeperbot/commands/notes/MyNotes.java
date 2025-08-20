@@ -93,7 +93,7 @@ public class MyNotes implements Commands {
             logger.info("[MyNotes] Пользователь {} перелистывает страницу с заметками...", userId);
             int page = Integer.parseInt(data.replace(getPagePrefix(), ""));
 
-            message = getReadyPage(myNotesDTO, page, message);
+            message = getReadyPageWithNotes(myNotesDTO, page, message);
             messageSender.sendMessageToUser(userId, message, myNotesDTO.getTelegramBotService());
         }
     }
@@ -102,7 +102,7 @@ public class MyNotes implements Commands {
     private void sendReadyPage(MyNotesDTO myNotesDTO, int page) {
         SendMessage message = new SendMessage();
 
-        message = getReadyPage(myNotesDTO, page, message);
+        message = getReadyPageWithNotes(myNotesDTO, page, message);
         messageSender.sendMessageToUser(myNotesDTO.getUserId(), message, myNotesDTO.getTelegramBotService());
     }
 
@@ -112,7 +112,7 @@ public class MyNotes implements Commands {
     }
 
 
-    private SendMessage getReadyPage(MyNotesDTO myNotesDTO, int page, SendMessage message) {
+    private SendMessage getReadyPageWithNotes(MyNotesDTO myNotesDTO, int page, SendMessage message) {
         Long userId = myNotesDTO.getUserId();
 
         logger.info("[MyNotes] Подготавливаю сообщение с заметками для пользователя {} ...", userId);
@@ -123,7 +123,7 @@ public class MyNotes implements Commands {
         message.setChatId(userId.toString());
         message.setText(textFromDTO);
 
-        InlineKeyboardMarkup inlineKeyboardMarkup = getPaginationAndNotes(page, notesPageDTO);
+        InlineKeyboardMarkup inlineKeyboardMarkup = getPaginationButtons(page, notesPageDTO);
         message.setReplyMarkup(inlineKeyboardMarkup);
 
         logger.info("[MyNotes] Страница с заметками для пользователя {} готова!", userId);
@@ -131,7 +131,7 @@ public class MyNotes implements Commands {
     }
 
 
-    private InlineKeyboardMarkup getPaginationAndNotes(int page, NotesPageDTO notesPageDTO) {
+    private InlineKeyboardMarkup getPaginationButtons(int page, NotesPageDTO notesPageDTO) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>(notesPageDTO.getKeyboard());
 
         if (notesPageDTO.getKeyboard().isEmpty() && page > 0) {
