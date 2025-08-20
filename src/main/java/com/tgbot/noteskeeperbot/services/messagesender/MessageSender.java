@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 @Service
 public class MessageSender {
-
     private static final Logger logger = LoggerFactory.getLogger(MessageSender.class);
 
     public void sendMessageToUser(Long userId, SendMessage message, TelegramBotService telegramBotService) {
@@ -31,5 +30,10 @@ public class MessageSender {
         } catch (Exception e) {
             logger.error("[MessageSender] Ошибка при отправке изображения пользователю {} : {}", userId, e.getMessage(), e);
         }
+    }
+
+    public SendMessage createMessage(Long userId, String text) {
+        SendMessage message = new SendMessage(userId.toString(), text);
+        return message;
     }
 }
