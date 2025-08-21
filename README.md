@@ -14,13 +14,11 @@
 - Java 17
 - Spring Boot
 - PostgreSQL + JPA/Hibernate
+- Maven
+- CI/CD
+- Docker
 - TelegramBots API
 - SLF4J + Logback 
-
-## Установка и запуск 
-
-Приложение запускается как Spring Boot-приложение (`.jar`) и подключается к PostgreSQL.  
-Для запуска необходимо указать Telegram-токен и параметры БД в файле `application.properties`.
 
 ## Ссылка на бота
 
