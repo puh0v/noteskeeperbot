@@ -31,7 +31,8 @@ jobs:
 
             git fetch origin
             git reset --hard origin/main
-
+            
+            chmod +x mvnw
             ./mvnw clean package -DskipTests
 
             docker compose down || true
