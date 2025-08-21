@@ -69,7 +69,7 @@ public class DeleteNote implements Commands {
         }
     }
 
-    /** Обработка ситуации, когда пользователь ввёл команду /delete_note повторно.*/
+    /** Обработка команды /delete_note */
     private void handleCommand(TelegramBotService telegramBotService, Long userId) {
         logger.info("[DeleteNote] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
 
