@@ -10,7 +10,6 @@ target/
 .vscode/
 
 # Secrets
-application-prod.properties
 application-dev.properties
 
 # Logs
