@@ -28,11 +28,13 @@ jobs:
           script: |
             set -e
             cd /home/botuser/noteskeeperbot
-      
+
             git fetch origin
             git reset --hard origin/main
-            
-            docker compose -f /home/botuser/noteskeeperbot/compose.yaml --env-file /home/botuser/noteskeeperbot/.env down || true
-            docker compose -f /home/botuser/noteskeeperbot/compose.yaml --env-file /home/botuser/noteskeeperbot/.env build --no-cache
-            docker compose -f /home/botuser/noteskeeperbot/compose.yaml --env-file /home/botuser/noteskeeperbot/.env up -d
-            docker compose -f /home/botuser/noteskeeperbot/compose.yaml --env-file /home/botuser/noteskeeperbot/.env ps
+
+            ./mvnw clean package -DskipTests
+
+            docker compose down || true
+            docker compose build --no-cache
+            docker compose up -d
+            docker compose ps
