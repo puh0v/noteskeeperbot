@@ -4,6 +4,7 @@ import com.tgbot.noteskeeperbot.database.entity.NotesEntity;
 import com.tgbot.noteskeeperbot.database.repository.NoteRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -17,6 +18,14 @@ public class NoteService {
 
     public List<NotesEntity> getAllUserNotes(Long userId) {
         return noteRepository.findAllByUserId(userId);
+    }
+
+    public void saveNote(Long userId, String note) {
+        NotesEntity noteEntity = new NotesEntity();
+        noteEntity.setUserId(userId);
+        noteEntity.setNoteText(note);
+        noteEntity.setCreatedAt(Instant.now());
+        noteRepository.save(noteEntity);
     }
 
     public void deleteNote(Long userId, int index) {
