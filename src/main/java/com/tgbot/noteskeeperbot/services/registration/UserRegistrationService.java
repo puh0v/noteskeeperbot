@@ -20,7 +20,7 @@ public class UserRegistrationService {
 
     public void addToDatabase(Long userId) {
         if (!usersRepository.existsByUserId(userId)) {
-            logger.info("[UserRegistryService] Новый пользователь: {} . Начинаю регистрацию...", userId);
+            logger.info("[UserRegistrationService] Новый пользователь: {} . Начинаю регистрацию...", userId);
 
             UsersEntity usersEntity = new UsersEntity();
             usersEntity.setUserId(userId);
@@ -28,9 +28,10 @@ public class UserRegistrationService {
             try {
                 usersRepository.save(usersEntity);
             } catch (Exception e) {
-                logger.error("[UserRegistryService] Произошла ошибка во время регистрации нового пользователя", e.getMessage(), e);
+                logger.error("[UserRegistrationService] Произошла ошибка во время регистрации нового пользователя", e.getMessage(), e);
+                return;
             }
-            logger.info("[UserRegistryService] Регистрация пользователя {} прошла успешно!", userId);
+            logger.info("[UserRegistrationService] Регистрация пользователя {} прошла успешно!", userId);
         }
     }
 
