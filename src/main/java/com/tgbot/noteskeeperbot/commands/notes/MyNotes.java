@@ -146,9 +146,4 @@ public class MyNotes implements Commands {
 
         return inlineKeyboardMarkup;
     }
-
-
-    public List<NotesEntity> getNotesByUserId(Long userId) {
-        return noteService.getAllUserNotes(userId);
-    }
 }
