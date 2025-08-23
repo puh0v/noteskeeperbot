@@ -7,6 +7,7 @@ import com.tgbot.noteskeeperbot.commands.notes.ui.NotesViewMode;
 import com.tgbot.noteskeeperbot.database.entity.NotesEntity;
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.commands.FlagManager;
+import com.tgbot.noteskeeperbot.services.noteservice.NoteService;
 import com.tgbot.noteskeeperbot.services.receiver.TelegramBotService;
 import com.tgbot.noteskeeperbot.services.messagesender.MessageSender;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,7 @@ import java.util.List;
 @Component
 public class ShareNote implements Commands {
 
-    private final MyNotes myNotes;
+    private final NoteService noteService;
     private final FlagManager flagManager;
     private final MessageSender messageSender;
     private final NotesPageBuilder notesPageBuilder;
@@ -31,8 +32,8 @@ public class ShareNote implements Commands {
     private static final Logger logger = LoggerFactory.getLogger(ShareNote.class);
 
 
-    public ShareNote(MyNotes myNotes, FlagManager flagManager, MessageSender messageSender, NotesPageBuilder notesPageBuilder, CallbackButtons callbackButtons) {
-        this.myNotes = myNotes;
+    public ShareNote(NoteService noteService, FlagManager flagManager, MessageSender messageSender, NotesPageBuilder notesPageBuilder, CallbackButtons callbackButtons) {
+        this.noteService = noteService;
         this.flagManager = flagManager;
         this.messageSender = messageSender;
         this.notesPageBuilder = notesPageBuilder;
@@ -51,117 +52,122 @@ public class ShareNote implements Commands {
 
     @Override
     public void execute(Long userId, String userMessage, Update update, TelegramBotService telegramBotService) {
-        List<NotesEntity> notes = myNotes.getNotesByUserId(userId);
+        prepareMessage(telegramBotService, update, userId, userMessage);
+    }
 
-        // --------------- Обрабатываем команды или Callback-и с пагинацией ----------------------
+
+    /** Метод prepareMessage() определяет, какой блок кода нужно вызвать в зависимости от запроса пользователя.
+     * Например, если пользователь повторно ввёл команду, перелистывает страницу и т.д.*/
+    private void prepareMessage(TelegramBotService telegramBotService, Update update, Long userId, String userMessage) {
+        List<NotesEntity> notes = noteService.getAllUserNotes(userId);
+
         if (userMessage.equals(getCommandName())) {
-            logger.info("[ShareNote] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
+            handleCommand(notes, telegramBotService, userId);
 
-            if (notes.isEmpty()) {
-                logger.info("[ShareNote] Список заметок пользователя {} пуст.", userId);
-
-                SendMessage message = notesPageBuilder.getEmptyMessage(userId);
-
-                messageSender.sendMessageToUser(userId, message, telegramBotService);
-            } else {
-                logger.info("[ShareNote] Подготавливаю список заметок для пользователя {} ...", userId);
-
-                flagManager.resetFlag(userId);
-                SendMessage message = getReadyPageWithNotes(userId, 0, getPagePrefix());
-
-                messageSender.sendMessageToUser(userId, message, telegramBotService);
-                flagManager.setFlag(userId, getCommandName());
-            }
         } else if (update.hasCallbackQuery()) {
-            logger.info("[ShareNote] Поступил Callback-запрос от пользователя {} ...", userId);
-            String data = update.getCallbackQuery().getData();
-
-            if (data.startsWith(getPagePrefix())) {
-                logger.info("[ShareNote] Пользователь {} перелистывает страницу с заметками...", userId);
-
-                SendMessage message;
-                int page = Integer.parseInt(data.replace(getPagePrefix(), ""));
-
-                if (page == 0) {
-                    message = getReadyPageWithNotes(userId, 0, getPagePrefix());
-                } else if (page > 0) {
-                    message = getReadyPageWithNotes(userId, page, getPagePrefix());
-                } else {
-                    return;
-                }
-
-                messageSender.sendMessageToUser(userId, message, telegramBotService);
-                return;
-            }
+            handleCallbackQuery(telegramBotService, userId, update);
         }
 
-        // --------------- Обрабатываем ответы от пользователя по флагу ----------------------
         if (flagManager.flagHasThisCommand(userId, getCommandName())) {
-            if (userMessage.matches("\\d+")) {
-                logger.info("[ShareNote] Пользователь {} ввёл номер заметки...", userId);
+            handleShareNoteInput(notes, telegramBotService, userId, userMessage);
+        }
+    }
 
-                shareNote(notes, userId, userMessage, telegramBotService);
+    /** Обработка команды /share_note */
+    private void handleCommand(List<NotesEntity> notes, TelegramBotService telegramBotService, Long userId) {
+        logger.info("[ShareNote] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
 
-                // СБРОС ФЛАГА НАХОДИТСЯ ВНУТРИ МЕТОДА
+        if (notes.isEmpty()) {
+            logger.info("[ShareNote] Список заметок пользователя {} пуст.", userId);
 
-            } else if (userMessage.equals("/cancel")) {
-                logger.info("[ShareNote] Пользователь {} отменил пересылку заметки. Формирую сообщение для ответа...", userId);
+            SendMessage message = notesPageBuilder.getEmptyMessage(userId);
+            messageSender.sendMessageToUser(userId, message, telegramBotService);
 
-                SendMessage message = new SendMessage(userId.toString(), "\uD83D\uDEAB Вы отменили пересылку заметки");
+        } else {
+            logger.info("[ShareNote] Подготавливаю список заметок для пользователя {} ...", userId);
+            flagManager.resetFlag(userId);
 
-                InlineKeyboardButton mainMenu = callbackButtons.mainMenuButton();
+            SendMessage message = getReadyPageWithNotes(userId, 0, getPagePrefix());
+            messageSender.sendMessageToUser(userId, message, telegramBotService);
 
-                List<InlineKeyboardButton> mainMenuButton = List.of(mainMenu);
-                List<List<InlineKeyboardButton>> rows = List.of(mainMenuButton);
+            flagManager.setFlag(userId, getCommandName());
+        }
+    }
 
-                InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-                inlineKeyboardMarkup.setKeyboard(rows);
+    /** Если пользователь перелистывает страницы, prepareMessage() обратится к этому методу*/
+    private void handleCallbackQuery(TelegramBotService telegramBotService, Long userId, Update update) {
+        logger.info("[ShareNote] Поступил Callback-запрос от пользователя {} ...", userId);
+        String data = update.getCallbackQuery().getData();
 
-                message.setReplyMarkup(inlineKeyboardMarkup);
+        if (data.startsWith(getPagePrefix())) {
+            logger.info("[ShareNote] Пользователь {} перелистывает страницу с заметками...", userId);
 
-                logger.info("[ShareNote] Сообщение с ответом пользователю {} готово!", userId);
-                messageSender.sendMessageToUser(userId, message, telegramBotService);
-                flagManager.resetFlag(userId);
+            SendMessage message;
+            int page = Integer.parseInt(data.replace(getPagePrefix(), ""));
+
+            if (page == 0) {
+                message = getReadyPageWithNotes(userId, 0, getPagePrefix());
+            } else if (page > 0) {
+                message = getReadyPageWithNotes(userId, page, getPagePrefix());
+            } else {
+                return;
             }
+
+            messageSender.sendMessageToUser(userId, message, telegramBotService);
+        }
+    }
+
+    /** Данный метод предназначен на случай, если пользователь выбрал заметку для пересылки
+     * или же решил отменить действие*/
+    private void handleShareNoteInput(List<NotesEntity> notes, TelegramBotService telegramBotService, Long userId, String userMessage) {
+        String trimmedText = userMessage.trim();
+
+        if (trimmedText.equals("/cancel")) {
+            logger.info("[ShareNote] Пользователь {} отменил пересылку заметки. Формирую сообщение для ответа...", userId);
+
+            SendMessage message = new SendMessage(userId.toString(), "\uD83D\uDEAB Вы отменили пересылку заметки");
+
+            InlineKeyboardMarkup inlineKeyboardMarkup = getButtonsInCaseOfCancel();
+            message.setReplyMarkup(inlineKeyboardMarkup);
+
+            logger.info("[ShareNote] Сообщение с ответом пользователю {} готово!", userId);
+            messageSender.sendMessageToUser(userId, message, telegramBotService);
+
+            flagManager.resetFlag(userId);
+
+        } else if (trimmedText.matches("\\d{1,9}")) {
+            logger.info("[ShareNote] Пользователь {} ввёл номер заметки...", userId);
+            shareNote(notes, userId, trimmedText, telegramBotService);
         }
     }
 
 
+    /** Отправляет заметку пользователя по её порядковому номеру.
+     * Если номер некорректный — отправляется сообщение об ошибке. */
     public void shareNote(List<NotesEntity> notes, Long userId, String userMessage, TelegramBotService telegramBotService) {
         logger.info("[ShareNote] Проверяю наличие нужной заметки для пользователя {} ...", userId);
-
         int number = Integer.parseInt(userMessage) - 1;
+
         if (number >= 0 && number < notes.size()) {
             logger.info("[ShareNote] Пользователь {} ввёл корректный номер заметки. Формирую сообщение для пересылки......", userId);
+            String note = noteService.getUserNote(userId, number);
 
-            NotesEntity note = notes.get(number);
-            String noteText = note.getNoteText();
+            SendMessage message = messageSender.createMessage(userId, "\uD83D\uDCDC Ваша заметка:\n\n" + note);
 
-            SendMessage message = new SendMessage(userId.toString(), "\uD83D\uDCDC Ваша заметка:\n\n" + noteText);
-
-            InlineKeyboardButton shareNote = callbackButtons.shareNoteToSomeoneButton(noteText);
-
-            List<InlineKeyboardButton> shareNoteButton = List.of(shareNote);
-            List<InlineKeyboardButton> mainMenuButton = List.of(callbackButtons.mainMenuButton());
-            List<List<InlineKeyboardButton>> keyboardRows = List.of(shareNoteButton, mainMenuButton);
-            InlineKeyboardMarkup markup = new InlineKeyboardMarkup(keyboardRows);
-
+            InlineKeyboardMarkup markup = getButtonsInCaseOfShare(note);
             message.setReplyMarkup(markup);
 
             logger.info("[ShareNote] Сообщение с заметкой для пользователя {} готово!", userId);
+
             messageSender.sendMessageToUser(userId, message, telegramBotService);
             flagManager.resetFlag(userId);
+
         } else {
             logger.info("[ShareNote] Пользователь {} ввёл несуществующий номер заметки. Формирую сообщение для уведомления ...", userId);
 
-            SendMessage message = new SendMessage(userId.toString(), "❌ Такой заметки не существует. Выберите другую.");
+            SendMessage message = messageSender.createMessage(userId, "❌ Такой заметки не существует. Выберите другую.");
 
-            List<InlineKeyboardButton> cancelButtonRow = List.of(callbackButtons.cancelButton());
-            List<List<InlineKeyboardButton>> rows = List.of(cancelButtonRow);
-
-            InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-            inlineKeyboardMarkup.setKeyboard(rows);
-
+            InlineKeyboardMarkup inlineKeyboardMarkup = getCancelButton();
             message.setReplyMarkup(inlineKeyboardMarkup);
 
             logger.info("[ShareNote] Сообщение с уведомлением для пользователя {} готово!", userId);
@@ -170,6 +176,7 @@ public class ShareNote implements Commands {
     }
 
 
+    /** Формирует страницу с заметками и кнопками пагинации.*/
     private SendMessage getReadyPageWithNotes(Long userId, Integer page, String pagePrefix) {
         logger.info("[ShareNote] Подготавливаю сообщение с заметками для пользователя {} ...", userId);
 
@@ -182,6 +189,7 @@ public class ShareNote implements Commands {
         if (notesPageDTO.getKeyboard().isEmpty() && page > 0) {
             finalText = textFromDTO;
             keyboard.add(List.of(callbackButtons.mainMenuButton()));
+
         } else {
             finalText = (page == 0)
                 ? "✉\uFE0F Отправьте номер заметки, которую вы хотите переслать\n\n\n" + textFromDTO
@@ -190,7 +198,7 @@ public class ShareNote implements Commands {
             keyboard.add(List.of(callbackButtons.cancelButton()));
         }
 
-        SendMessage message = new SendMessage(userId.toString(), finalText);
+        SendMessage message = messageSender.createMessage(userId, finalText);
 
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         inlineKeyboardMarkup.setKeyboard(keyboard);
@@ -199,5 +207,40 @@ public class ShareNote implements Commands {
 
         logger.info("[ShareNote] Страница с заметками для пользователя {} готова!", userId);
         return message;
+    }
+
+
+    /** Методы для создания кнопок*/
+    private InlineKeyboardMarkup getButtonsInCaseOfShare(String note) {
+        InlineKeyboardButton shareNote = callbackButtons.shareNoteToSomeoneButton(note);
+
+        List<InlineKeyboardButton> shareNoteButton = List.of(shareNote);
+        List<InlineKeyboardButton> mainMenuButton = List.of(callbackButtons.mainMenuButton());
+        List<List<InlineKeyboardButton>> keyboardRows = List.of(shareNoteButton, mainMenuButton);
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup(keyboardRows);
+
+        return inlineKeyboardMarkup;
+    }
+
+    private InlineKeyboardMarkup getButtonsInCaseOfCancel() {
+        InlineKeyboardButton mainMenu = callbackButtons.mainMenuButton();
+
+        List<InlineKeyboardButton> mainMenuButton = List.of(mainMenu);
+        List<List<InlineKeyboardButton>> rows = List.of(mainMenuButton);
+
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        inlineKeyboardMarkup.setKeyboard(rows);
+
+        return inlineKeyboardMarkup;
+    }
+
+    private InlineKeyboardMarkup getCancelButton() {
+        List<InlineKeyboardButton> cancelButton = List.of(callbackButtons.cancelButton());
+        List<List<InlineKeyboardButton>> rows = List.of(cancelButton);
+
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        inlineKeyboardMarkup.setKeyboard(rows);
+
+        return inlineKeyboardMarkup;
     }
 }
