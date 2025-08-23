@@ -20,6 +20,13 @@ public class NoteService {
         return noteRepository.findAllByUserId(userId);
     }
 
+    public String getUserNote(Long userId, int number) {
+        List<NotesEntity> notes = getAllUserNotes(userId);
+        NotesEntity noteFromDB = notes.get(number);
+
+        return noteFromDB.getNoteText();
+    }
+
     public void saveNote(Long userId, String note) {
         NotesEntity noteEntity = new NotesEntity();
         noteEntity.setUserId(userId);
