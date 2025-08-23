@@ -111,9 +111,9 @@ public class DeleteNote implements Commands {
     /** Данный метод предназначен на случай, если пользователь выбрал заметку для удаления
      * или же решил отменить удаление*/
     private void handleDeleteNoteInput(TelegramBotService telegramBotService, Long userId, String userMessage) {
-        userMessage = userMessage.trim();
+        String trimmedText = userMessage.trim();
 
-        if (userMessage.equals("/cancel")) {
+        if (trimmedText.equals("/cancel")) {
             logger.info("[DeleteNote] Пользователь {} отменил удаление заметки. Формирую сообщение для ответа...", userId);
 
             SendMessage cancelMessage = messageSender.createMessage(userId, "\uD83D\uDEAB Вы отменили удаление заметки");
@@ -126,9 +126,9 @@ public class DeleteNote implements Commands {
 
             flagManager.resetFlag(userId);
 
-        } else if (userMessage.matches("\\d{1,9}")) {
+        } else if (trimmedText.matches("\\d{1,9}")) {
             logger.info("[DeleteNote] Пользователь {} ввёл номер заметки...", userId);
-            deleteNote(userId, userMessage, telegramBotService);
+            deleteNote(userId, trimmedText, telegramBotService);
         }
     }
 
