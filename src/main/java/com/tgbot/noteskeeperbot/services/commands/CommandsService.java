@@ -45,7 +45,7 @@ public class CommandsService {
         Long userId = optUserId.get();
         String userMessage = optUserMessage.get();
 
-        userRegistrationService.addToDatabase(userId);
+        userRegistrationService.saveUserToDatabase(userId);
 
         // --------------- Обработка команды через Callback или ручной ввод ----------------------
         if (commandsMap.containsKey(userMessage)) {
