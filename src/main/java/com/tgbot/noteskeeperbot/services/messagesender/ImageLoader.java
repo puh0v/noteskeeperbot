@@ -6,7 +6,7 @@ import java.io.InputStream;
 @Component
 public class ImageLoader {
 
-    public InputStream getImagesStream(String path) {
+    public InputStream getImageStream(String path) {
         return getClass().getClassLoader().getResourceAsStream(path);
     }
 }
