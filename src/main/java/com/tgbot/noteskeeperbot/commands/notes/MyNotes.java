@@ -54,7 +54,8 @@ public class MyNotes implements Commands {
         prepareMessage(myNotesDTO);
     }
 
-
+    /** Метод prepareMessage() определяет, какой блок кода нужно вызвать в зависимости от запроса пользователя.
+     * Например, если пользователь повторно ввёл команду, перелистывает страницу и т.д.*/
     private void prepareMessage(MyNotesDTO myNotesDTO) {
         Long userId = myNotesDTO.getUserId();
         List<NotesEntity> notes = noteService.getAllUserNotes(userId);
@@ -69,7 +70,7 @@ public class MyNotes implements Commands {
         }
     }
 
-
+    /** Обработка команды /my_notes */
     private void handleCommand(List<NotesEntity> notes, MyNotesDTO myNotesDTO) {
         Long userId = myNotesDTO.getUserId();
 
@@ -84,6 +85,7 @@ public class MyNotes implements Commands {
         }
     }
 
+    /** Если пользователь перелистывает страницы, prepareMessage() обратится к этому методу*/
     private void handleCallbackQuery(MyNotesDTO myNotesDTO) {
         Long userId = myNotesDTO.getUserId();
         String data = myNotesDTO.getUpdate().getCallbackQuery().getData();
@@ -111,7 +113,7 @@ public class MyNotes implements Commands {
         messageSender.sendMessageToUser(myNotesDTO.getUserId(), message, myNotesDTO.getTelegramBotService());
     }
 
-
+    /** Формирует страницу с заметками и кнопками пагинации.*/
     private SendMessage getReadyPageWithNotes(MyNotesDTO myNotesDTO, int page, SendMessage message) {
         Long userId = myNotesDTO.getUserId();
 
@@ -130,7 +132,7 @@ public class MyNotes implements Commands {
         return message;
     }
 
-
+    /** Получаем кнопки для пагинации.*/
     private InlineKeyboardMarkup getPaginationButtons(int page, NotesPageDTO notesPageDTO) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>(notesPageDTO.getKeyboard());
 
