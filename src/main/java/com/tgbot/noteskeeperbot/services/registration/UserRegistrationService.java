@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -36,6 +37,11 @@ public class UserRegistrationService {
     }
 
     public List<Long> getAllUserIds() {
-        return usersRepository.findAllUserIds();
+        List<UsersEntity> usersEntities = usersRepository.findAll();
+        List<Long> userIds = new ArrayList<>();
+        for (UsersEntity usersEntity : usersEntities) {
+            userIds.add(usersEntity.getUserId());
+        }
+        return userIds;
     }
 }
