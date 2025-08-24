@@ -10,6 +10,4 @@ import java.util.List;
 public interface UsersRepository extends JpaRepository<UsersEntity, Long> {
 
     boolean existsByUserId(Long userId);
-
-    List<Long> findAllUserIds();
 }
