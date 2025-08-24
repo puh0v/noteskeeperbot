@@ -3,6 +3,7 @@ package com.tgbot.noteskeeperbot.commands.startcommand;
 
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.config.BotConfig;
+import com.tgbot.noteskeeperbot.services.messagesender.ImageLoader;
 import com.tgbot.noteskeeperbot.services.receiver.TelegramBotService;
 import com.tgbot.noteskeeperbot.commands.notes.ui.CallbackButtons;
 import com.tgbot.noteskeeperbot.services.messagesender.MessageSender;
@@ -23,15 +24,18 @@ import java.util.List;
 @Component
 public class StartCommand implements Commands {
 
-    private final CallbackButtons callBackButtons;
+    private final CallbackButtons callbackButtons;
     private final MessageSender messageSender;
     private final BotConfig botConfig;
+    private final ImageLoader imageLoader;
+    private static final String IMAGE_PATH = "images/paper.png";
     private static final Logger logger = LoggerFactory.getLogger(StartCommand.class);
 
-    public StartCommand(CallbackButtons callBackButtons, MessageSender messageSender, BotConfig botConfig) {
-        this.callBackButtons = callBackButtons;
+    public StartCommand(CallbackButtons callbackButtons, MessageSender messageSender, BotConfig botConfig, ImageLoader imageLoader) {
+        this.callbackButtons = callbackButtons;
         this.messageSender = messageSender;
         this.botConfig = botConfig;
+        this.imageLoader = imageLoader;
     }
 
     @Override
@@ -46,13 +50,14 @@ public class StartCommand implements Commands {
         prepareMessage(telegramBotService, userId);
     }
 
-
+    /** Метод prepareMessage() отвечает за подготовку данных для формирования сообщения. */
     private void prepareMessage(TelegramBotService telegramBotService, Long userId) {
         String text = welcomeText();
         InlineKeyboardMarkup inlineKeyboardMarkup = prepareButtons();
         sendMessage(telegramBotService, userId, text, inlineKeyboardMarkup);
     }
 
+    /** Подготовка текста для сообщения в главном меню. */
     private String welcomeText() {
         String text = "\uD83D\uDCDD Добро пожаловать в " + botConfig.getBotUsername() + "! \uD83D\uDCDD\n\n" +
                 "⚠\uFE0F Бот пока в стадии разработки, многие функции ещё в процессе реализации.\n" +
@@ -61,9 +66,45 @@ public class StartCommand implements Commands {
         return text;
     }
 
+    /** Методы для финальной подготовки и отправки сообщения */
+    private void sendMessage(TelegramBotService telegramBotService, Long userId, String text, InlineKeyboardMarkup inlineKeyboardMarkup) {
+        logger.info("[StartCommand] Начинаю подготовку изображения для пользователя {} ...", userId);
+        SendPhoto image = new SendPhoto();
+        image.setChatId(userId.toString());
+
+        try {
+            InputStream imageStream = imageLoader.getImageStream(IMAGE_PATH);
+
+            if (imageStream == null) {
+                throw new RuntimeException("Файл \"" + IMAGE_PATH + "\" не найден");
+            }
+
+            image.setPhoto(new InputFile(imageStream, "paper.png"));
+            image.setCaption(text);
+            image.setReplyMarkup(inlineKeyboardMarkup);
+
+        } catch (RuntimeException e) {
+            logger.error("[StartCommand] Возникла ошибка при подготовке изображения для пользователя {} : {}", userId, e.getMessage(), e);
+
+            SendMessage fallbackMessage = messageSender.createMessage(userId, text);
+            fallbackMessage.setReplyMarkup(inlineKeyboardMarkup);
+
+            logger.info("[StartCommand] Повторная подготовка изображения для пользователя {} ...", userId);
+            try {
+                messageSender.sendMessageToUser(userId, fallbackMessage, telegramBotService);
+            } catch (Exception e1) {
+                logger.error("[StartCommand] Возникла повторная ошибка при подготовке изображения для пользователя {} : {}", userId, e1.getMessage(), e1);
+            }
+            return;
+        }
+
+        messageSender.sendImageToUser(userId, image, telegramBotService);
+    }
+
+    /** Метод для создания кнопок в главном меню. */
     private InlineKeyboardMarkup prepareButtons() {
-        InlineKeyboardButton myNotesButton = callBackButtons.myNotesButton();
-        InlineKeyboardButton addNoteButton = callBackButtons.addNoteButton();
+        InlineKeyboardButton myNotesButton = callbackButtons.myNotesButton();
+        InlineKeyboardButton addNoteButton = callbackButtons.addNoteButton();
 
         List<InlineKeyboardButton> myNotesRow = new ArrayList<>();
         myNotesRow.add(myNotesButton);
@@ -74,39 +115,5 @@ public class StartCommand implements Commands {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup(rows);
 
         return inlineKeyboardMarkup;
-    }
-
-    private void sendMessage(TelegramBotService telegramBotService, Long userId, String text, InlineKeyboardMarkup inlineKeyboardMarkup) {
-
-        SendPhoto image = new SendPhoto();
-        image.setChatId(userId.toString());
-
-        logger.info("[StartCommand] Начинаю подготовку изображения для пользователя {} ...", userId);
-        try {
-            InputStream imageStream = getClass().getClassLoader().getResourceAsStream("images/paper.png");
-
-            if (imageStream == null) {
-                throw new RuntimeException("Файл \"/images/paper.png\" не найден");
-            }
-
-            image.setPhoto(new InputFile(imageStream, "paper.png"));
-            image.setCaption(text);
-            image.setReplyMarkup(inlineKeyboardMarkup);
-        } catch (Exception e) {
-            logger.error("[StartCommand] Возникла ошибка при подготовке изображения для пользователя {} : {}", userId, e.getMessage(), e);
-
-            SendMessage fallbackMessage = new SendMessage(userId.toString(), text);
-            fallbackMessage.setReplyMarkup(inlineKeyboardMarkup);
-            logger.info("[StartCommand] Повторная подготовка изображения для пользователя {} ...", userId);
-            try {
-                messageSender.sendMessageToUser(userId, fallbackMessage, telegramBotService);
-            } catch (Exception e1) {
-                logger.error("[StartCommand] Возникла повторная ошибка при подготовке изображения для пользователя {} : {}", userId, e1.getMessage(), e1);
-            }
-            return;
-        }
-
-        logger.info("[StartCommand] Подготовка изображения для пользователя {} завершена!", userId);
-        messageSender.sendImageToUser(userId, image, telegramBotService);
     }
 }
