@@ -1,6 +1,5 @@
 package com.tgbot.noteskeeperbot.commands.admin;
 
-import com.tgbot.noteskeeperbot.database.entity.UsersEntity;
 import com.tgbot.noteskeeperbot.commands.Commands;
 import com.tgbot.noteskeeperbot.commands.FlagManager;
 import com.tgbot.noteskeeperbot.services.receiver.TelegramBotService;
@@ -23,13 +22,13 @@ public class AdminCommand implements Commands {
 
     @Value("${admin.id}")
     private long adminId;
-    private final UserRegistrationService userRegistry;
+    private final UserRegistrationService userRegistrationService;
     private final FlagManager flagManager;
     private final MessageSender messageSender;
     private static final Logger logger = LoggerFactory.getLogger(AdminCommand.class);
 
-    public AdminCommand(UserRegistrationService userRegistry, FlagManager flagManager, MessageSender messageSender) {
-        this.userRegistry = userRegistry;
+    public AdminCommand(UserRegistrationService userRegistrationService, FlagManager flagManager, MessageSender messageSender) {
+        this.userRegistrationService = userRegistrationService;
         this.flagManager = flagManager;
         this.messageSender = messageSender;
     }
@@ -41,16 +40,14 @@ public class AdminCommand implements Commands {
 
     @Override
     public void execute(Long userId, String userMessage, Update update, TelegramBotService telegramBotService) {
+        prepareMessage(telegramBotService, update, userId, userMessage);
+    }
 
+    /** Метод prepareMessage() определяет, какой блок кода нужно вызвать
+     * в зависимости от запроса админа.*/
+    private void prepareMessage(TelegramBotService telegramBotService, Update update, Long userId, String userMessage) {
         if (userMessage.equals(getCommandName()) && userId == adminId) {
-            logger.info("[AdminCommand] Поступила команда от администратора...");
-
-            flagManager.resetFlag(userId);
-            SendMessage message = new SendMessage(userId.toString(), "Отправьте текст для рассылки " +
-                    "другим пользователям.\n\nДля отмены рассылки отправьте команду \"/cancel\"");
-
-            messageSender.sendMessageToUser(userId, message, telegramBotService);
-            flagManager.setFlag(userId, getCommandName());
+            handleCommand(telegramBotService, userId);
 
         } else if (flagManager.flagHasThisCommand(userId, getCommandName())) {
             logger.info("[AdminCommand] Поступил ответ администратора (по флагу)...");
@@ -58,47 +55,65 @@ public class AdminCommand implements Commands {
             if (userMessage.equals("/cancel")) {
                 logger.info("[AdminCommand] Администратор отменил рассылку пользователям.");
 
-                SendMessage message = new SendMessage(userId.toString(), "Рассылка отменена");
-                messageSender.sendMessageToUser(userId, message, telegramBotService);
+                SendMessage message = messageSender.createMessage(userId, "Рассылка отменена");
 
+                messageSender.sendMessageToUser(userId, message, telegramBotService);
                 flagManager.resetFlag(userId);
 
             } else {
-                List<UsersEntity> listOfUsers = userRegistry.getAllUsers();
+                sendMessage(telegramBotService, update, userId, userMessage);
+            }
+        }
+    }
 
-                if (update.getMessage().hasText() && !update.getMessage().hasPhoto()) {
-                    logger.info("[AdminCommand] Подготовка к рассылке текстового сообщения всем пользователям...");
+    /** Обработка команды /admin_command */
+    private void handleCommand(TelegramBotService telegramBotService, Long userId) {
+        logger.info("[AdminCommand] Поступила команда от администратора...");
+        flagManager.resetFlag(userId);
 
-                    for (UsersEntity user : listOfUsers) {
-                        Long id = user.getUserId();
-                        SendMessage message = new SendMessage(id.toString(), userMessage);
-                        messageSender.sendMessageToUser(id, message, telegramBotService);
-                    }
-                    flagManager.resetFlag(userId);
+        SendMessage message = messageSender.createMessage(userId, "Отправьте текст для рассылки " +
+                "другим пользователям.\n\nДля отмены рассылки отправьте команду \"/cancel\"");
 
-                } else if (update.getMessage().hasPhoto()) {
-                    logger.info("[AdminCommand] Подготовка к рассылке изображения...");
+        messageSender.sendMessageToUser(userId, message, telegramBotService);
+        flagManager.setFlag(userId, getCommandName());
+    }
 
-                    List<PhotoSize> photoList = update.getMessage().getPhoto();
-                    PhotoSize largestImage = photoList.get(photoList.size() - 1);
-                    String fileId = largestImage.getFileId();
+    /** Метод для рассылки сообщения (с изображением или без) */
+    private void sendMessage(TelegramBotService telegramBotService, Update update, Long userId, String userMessage) {
+        List<Long> listOfUsers = userRegistrationService.getAllUserIds();
 
-                    for (UsersEntity user : listOfUsers) {
-                        Long id = user.getUserId();
-                        try {
-                            SendPhoto image = new SendPhoto();
-                            image.setChatId(id);
-                            image.setPhoto(new InputFile(fileId));
-                            image.setCaption(userMessage);
+        if (update.getMessage().hasText() && !update.getMessage().hasPhoto()) {
+            logger.info("[AdminCommand] Подготовка к рассылке текстового сообщения всем пользователям...");
 
-                            messageSender.sendImageToUser(id, image, telegramBotService);
-                        } catch (Exception e) {
-                            logger.error("[AdminCommand] Не удалось отправить сообщение пользователю {} : {}", id, e.getMessage(), e);
-                        }
-                    }
-                    flagManager.resetFlag(userId);
+            for (int i = 0; i < listOfUsers.size(); i++) {
+                Long id = listOfUsers.get(i);
+                SendMessage message = messageSender.createMessage(id, userMessage);
+                messageSender.sendMessageToUser(id, message, telegramBotService);
+            }
+            flagManager.resetFlag(userId);
+
+        } else if (update.getMessage().hasPhoto()) {
+            logger.info("[AdminCommand] Подготовка к рассылке изображения...");
+
+            List<PhotoSize> photoList = update.getMessage().getPhoto();
+            PhotoSize largestImage = photoList.get(photoList.size() - 1);
+            String fileId = largestImage.getFileId();
+
+            for (int i = 0; i < listOfUsers.size(); i++) {
+                Long id = listOfUsers.get(i);
+
+                try {
+                    SendPhoto image = new SendPhoto();
+                    image.setChatId(id);
+                    image.setPhoto(new InputFile(fileId));
+                    image.setCaption(userMessage);
+
+                    messageSender.sendImageToUser(id, image, telegramBotService);
+                } catch (Exception e) {
+                    logger.error("[AdminCommand] Не удалось отправить сообщение пользователю {} : {}", id, e.getMessage(), e);
                 }
             }
+            flagManager.resetFlag(userId);
         }
     }
 }
