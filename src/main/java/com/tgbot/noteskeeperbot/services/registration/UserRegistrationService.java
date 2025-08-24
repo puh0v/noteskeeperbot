@@ -18,7 +18,7 @@ public class UserRegistrationService {
         this.usersRepository = usersRepository;
     }
 
-    public void addToDatabase(Long userId) {
+    public void saveUserToDatabase(Long userId) {
         if (!usersRepository.existsByUserId(userId)) {
             logger.info("[UserRegistrationService] Новый пользователь: {} . Начинаю регистрацию...", userId);
 
@@ -35,7 +35,7 @@ public class UserRegistrationService {
         }
     }
 
-    public List<UsersEntity> getAllUsers() {
-        return usersRepository.findAll();
+    public List<Long> getAllUserIds() {
+        return usersRepository.findAllUserIds();
     }
 }
