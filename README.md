@@ -15,7 +15,7 @@
 - Spring Boot
 - PostgreSQL + JPA/Hibernate
 - Maven
-- CI/CD
+- GitHub Actions (CI/CD)
 - Docker
 - TelegramBots API
 - SLF4J + Logback 
