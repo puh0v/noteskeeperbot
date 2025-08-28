@@ -13,7 +13,7 @@
  
 - Java 17
 - Spring Boot
-- PostgreSQL + JPA/Hibernate
+- PostgreSQL + Spring Data JPA (Hibernate)
 - Maven
 - GitHub Actions (CI/CD)
 - Docker
