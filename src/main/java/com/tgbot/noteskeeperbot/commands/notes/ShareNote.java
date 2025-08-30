@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Класс для пересылки заметок пользователя другим пользователям Telegram. */
 @Component
 public class ShareNote implements Commands {
 
@@ -68,7 +69,7 @@ public class ShareNote implements Commands {
             handleCallbackQuery(telegramBotService, userId, update);
         }
 
-        if (flagManager.flagHasThisCommand(userId, getCommandName())) {
+        if (flagManager.flagContainsCommand(userId, getCommandName())) {
             handleShareNoteInput(notes, telegramBotService, userId, userMessage);
         }
     }
@@ -90,7 +91,7 @@ public class ShareNote implements Commands {
             SendMessage message = getReadyPageWithNotes(userId, 0, getPagePrefix());
             messageSender.sendMessageToUser(userId, message, telegramBotService);
 
-            flagManager.setFlag(userId, getCommandName());
+            flagManager.setFlag(userId, this);
         }
     }
 
