@@ -8,8 +8,12 @@ import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.IOException;
 
+/** Основной сервис Telegram-бота. Принимает обновления от Telegram API (сообщения или callback-запросы)
+ * и передаёт их в CommandsService для дальнейшей обработки.*/
 @Service
 public class TelegramBotService extends TelegramLongPollingBot {
 
@@ -32,27 +36,24 @@ public class TelegramBotService extends TelegramLongPollingBot {
         return botConfig.getBotToken();
     }
 
+    /** Обрабатывает входящее обновление от Telegram (сообщение или Callback)*/
     @Override
     public void onUpdateReceived(Update update) {
+        if (update.hasMessage() || update.hasCallbackQuery()) {
+            logger.info("[TelegramBotService] Получен запрос от пользователя...");
 
-        if (update.hasMessage()) {
-            try {
-                logger.info("[TelegramBotService] Пришло сообщение от пользователя...");
-                commandsService.executeCommand(update, this);
-            } catch (Exception e) {
-                logger.error("[TelegramBotService] Не удалось принять и обработать сообщение пользователя", e);
+            if (update.hasCallbackQuery()) {
+                //Сбрасываем состояние "загрузки" у inline-кнопок (визуал)
+                AnswerCallbackQuery answer = new AnswerCallbackQuery();
+                answer.setCallbackQueryId(update.getCallbackQuery().getId());
+                try {
+                    execute(answer);
+                } catch (TelegramApiException e) {
+                    logger.error("Не удалось сбросить загрузку у inline-кнопки...", e);
+                }
             }
 
-        } else if (update.hasCallbackQuery()) {
-            AnswerCallbackQuery answer = new AnswerCallbackQuery();
-            answer.setCallbackQueryId(update.getCallbackQuery().getId());
-            try {
-                logger.info("[TelegramBotService] Пришёл Callback-запрос от пользователя...");
-                commandsService.executeCommand(update, this);
-                execute(answer);
-            } catch (Exception e) {
-                logger.error("[TelegramBotService] Не удалось принять и обработать Callback-запрос пользователя", e);
-            }
+            commandsService.executeCommand(update, this);
         }
     }
 }
