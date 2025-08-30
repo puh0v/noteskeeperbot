@@ -15,23 +15,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+
+/** Сервис, принимающий обновления от класса TelegramBotService. Нужен для обработки запроса с последующей передачей
+ * информации в один из классов, раюботающих с конкретной командой.*/
 @Service
 public class CommandsService {
 
     private final FlagManager flagManager;
     private final UserRegistrationService userRegistrationService;
+    private final Map<String, Commands> commandsMap;
     private static final Logger logger = LoggerFactory.getLogger(CommandsService.class);
-
-    private final Map<String, Commands> commandsMap = new HashMap<>();
 
     public CommandsService(FlagManager flagManager, UserRegistrationService userRegistrationService, List<Commands> commands) {
         this.flagManager = flagManager;
         this.userRegistrationService = userRegistrationService;
+        this.commandsMap = new HashMap<>();
         for (Commands command : commands) {
             commandsMap.put(command.getCommandName(), command);
         }
     }
 
+    /** Метод для обработки запроса. Здесь мы получаем id пользователя, а также "вытягиваем" информацию, которая поступила
+     * (команда, ответ по флагу или же Callback-запрос)*/
     public void executeCommand(Update update, TelegramBotService telegramBotService) {
         logger.info("[CommandsService] Получаю более подробную информацию о сообщении...");
 
@@ -47,34 +52,32 @@ public class CommandsService {
 
         userRegistrationService.saveUserToDatabase(userId);
 
-        // --------------- Обработка команды через Callback или ручной ввод ----------------------
+        // --------------- Обработка команды ----------------------
         if (commandsMap.containsKey(userMessage)) {
             logger.info("[CommandsService] Поступила команда от пользователя {}. Вызываю соответствующий класс...", userId);
 
             flagManager.resetFlag(userId);
             commandsMap.get(userMessage).execute(userId, userMessage, update, telegramBotService);
             return;
+
         }
 
-        // --------------- Callback-и (пагинация) ---------------------
-        for (Commands prefixes : commandsMap.values()) {
-            String prefix = prefixes.getPagePrefix();
+        // --------------- Работа с пагинацией ---------------------
+        for (Commands command : commandsMap.values()) {
+            String prefix = command.getPagePrefix();
+
             if (userMessage.startsWith(prefix)) {
                 logger.info("[CommandsService] Пользователь {} использует пагинацию. Вызываю соответствующий класс...", userId);
-
-                prefixes.execute(userId, userMessage, update, telegramBotService);
-                return;
-            }
-        }
-
-        // --------------- Отправляем сообщение/callback в класс-команду по флагу (напр., /cancel) ---------------------
-        for (Commands command : commandsMap.values()) {
-            if (flagManager.flagHasThisCommand(userId, command.getCommandName())) {
-                logger.info("[CommandsService] Обработка сообщения/Callback-запроса по флагу от пользователя {}. Вызываю соответствующий класс...", userId);
-
                 command.execute(userId, userMessage, update, telegramBotService);
                 return;
             }
+        }
+
+        // --------------- Обработка сообщения по флагу ---------------------
+        if (flagManager.flagContainsKey(userId)) {
+            logger.info("[CommandsService] Обработка сообщения/Callback-запроса по флагу от пользователя {}. Вызываю соответствующий класс...", userId);
+            Commands command = flagManager.getCommandByFlag(userId);
+            command.execute(userId, userMessage, update, telegramBotService);
         }
     }
 
