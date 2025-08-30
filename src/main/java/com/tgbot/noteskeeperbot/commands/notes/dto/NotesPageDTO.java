@@ -4,6 +4,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 import java.util.List;
 
+/** Класс для хранения страницы с заметками и кнопок для пагинации */
 public class NotesPageDTO {
     private final String text;
     private final List<List<InlineKeyboardButton>> keyboard;
