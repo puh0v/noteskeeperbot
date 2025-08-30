@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Сервис для регистрации новых пользователей при первом запуске бота. */
 @Service
 public class UserRegistrationService {
 
