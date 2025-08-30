@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Класс-хелпер для создания страниц с заметками и кнопками пагинации */
 @Component
 public class NotesPageBuilder {
 
