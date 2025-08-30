@@ -21,6 +21,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/** Команда для отображения главного меню при вводе "/start". */
 @Component
 public class StartCommand implements Commands {
 
