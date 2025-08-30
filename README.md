@@ -13,9 +13,9 @@
  
 - Java 17
 - Spring Boot
-- PostgreSQL + JPA/Hibernate
+- PostgreSQL + Spring Data JPA (Hibernate)
 - Maven
-- CI/CD
+- GitHub Actions (CI/CD)
 - Docker
 - TelegramBots API
 - SLF4J + Logback 
