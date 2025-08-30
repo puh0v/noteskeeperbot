@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 
 import java.util.List;
 
+/** Класс для добавления новой заметки пользователя. */
 @Component
 public class AddNote implements Commands {
 
@@ -52,7 +53,7 @@ public class AddNote implements Commands {
 
             handleCommand(telegramBotService, userId);
 
-        } else if (flagManager.flagHasThisCommand(userId, getCommandName())) {
+        } else if (flagManager.flagContainsCommand(userId, getCommandName())) {
             if (userMessage.equals("/cancel")) {
                 logger.info("[AddNote] Пользователь {} отменил добавление заметки. Формирую сообщение для ответа...", userId);
 
@@ -80,7 +81,7 @@ public class AddNote implements Commands {
         message.setReplyMarkup(inlineKeyboardMarkup);
 
         messageSender.sendMessageToUser(userId, message, telegramBotService);
-        flagManager.setFlag(userId, getCommandName());
+        flagManager.setFlag(userId, this);
     }
 
     /** Метод для работы с заметкой пользователя */
