@@ -7,18 +7,31 @@ import java.util.Map;
 
 @Component
 public class FlagManager {
+    private final Map<Long, Commands> flags;
 
-    private final Map<Long, String> flags = new HashMap<>();
+    public FlagManager() {
+        this.flags = new HashMap<>();
+    }
 
-    public void setFlag(long userId, String flag) {
-        flags.put(userId, flag);
+
+    public void setFlag(long userId, Commands command) {
+        flags.put(userId, command);
+    }
+
+    public Commands getCommandByFlag(long userId) {
+        return flags.get(userId);
+    }
+
+    public boolean flagContainsKey(long userId) {
+        return flags.containsKey(userId);
+    }
+
+    public boolean flagContainsCommand(long userId, String userMessage) {
+        String commandName = flags.get(userId).getCommandName();
+        return userMessage.equals(commandName);
     }
 
     public void resetFlag(long userId) {
         flags.remove(userId);
-    }
-
-    public boolean flagHasThisCommand(long userId, String commandName) {
-        return commandName.equals(flags.get(userId));
     }
 }
