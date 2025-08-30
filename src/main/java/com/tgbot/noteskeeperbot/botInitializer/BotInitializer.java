@@ -8,6 +8,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+/** Инициализация бота в TelegramBots API */
 @Component
 public class BotInitializer {
 
