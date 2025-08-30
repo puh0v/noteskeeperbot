@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 
 import java.util.*;
 
+/** Класс для удаления заметки пользователя. */
 @Component
 public class DeleteNote implements Commands {
 
@@ -64,7 +65,7 @@ public class DeleteNote implements Commands {
         } else if (update.hasCallbackQuery() && userMessage.startsWith(getPagePrefix())) {
             handleCallbackQuery(telegramBotService, userId, update, userMessage);
 
-        } else if (flagManager.flagHasThisCommand(userId, getCommandName())) {
+        } else if (flagManager.flagContainsCommand(userId, getCommandName())) {
             handleDeleteNoteInput(telegramBotService, userId, userMessage);
         }
     }
@@ -88,7 +89,7 @@ public class DeleteNote implements Commands {
             SendMessage message = getReadyPageWithNotes(userId, 0, getPagePrefix());
 
             messageSender.sendMessageToUser(userId, message, telegramBotService);
-            flagManager.setFlag(userId, getCommandName());
+            flagManager.setFlag(userId, this);
         }
     }
 
