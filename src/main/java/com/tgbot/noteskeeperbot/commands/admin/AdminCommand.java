@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 
 import java.util.List;
 
+/** Класс для работы с командой для рассылки уведомления всем пользователям бота.
+ * Доступно только для администратора.*/
 @Component
 public class AdminCommand implements Commands {
 
@@ -49,7 +51,7 @@ public class AdminCommand implements Commands {
         if (userMessage.equals(getCommandName()) && userId == adminId) {
             handleCommand(telegramBotService, userId);
 
-        } else if (flagManager.flagHasThisCommand(userId, getCommandName())) {
+        } else if (flagManager.flagContainsCommand(userId, getCommandName())) {
             logger.info("[AdminCommand] Поступил ответ администратора (по флагу)...");
 
             if (userMessage.equals("/cancel")) {
@@ -75,7 +77,7 @@ public class AdminCommand implements Commands {
                 "другим пользователям.\n\nДля отмены рассылки отправьте команду \"/cancel\"");
 
         messageSender.sendMessageToUser(userId, message, telegramBotService);
-        flagManager.setFlag(userId, getCommandName());
+        flagManager.setFlag(userId, this);
     }
 
     /** Метод для рассылки сообщения (с изображением или без) */
