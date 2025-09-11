@@ -1,6 +1,6 @@
 package com.tgbot.noteskeeperbot.commands.notes;
 
-import com.tgbot.noteskeeperbot.commands.notes.dto.MyNotesDTO;
+import com.tgbot.noteskeeperbot.commands.notes.dto.MyNotesContext;
 import com.tgbot.noteskeeperbot.commands.notes.dto.NotesPageDTO;
 import com.tgbot.noteskeeperbot.commands.notes.render.NotesPageBuilder;
 import com.tgbot.noteskeeperbot.commands.notes.ui.NotesViewMode;
@@ -50,72 +50,72 @@ public class MyNotes implements Commands {
 
     @Override
     public void execute(Long userId, String userMessage, Update update, TelegramBotService telegramBotService) {
-        MyNotesDTO myNotesDTO = new MyNotesDTO(telegramBotService, update, userId, userMessage);
-        prepareMessage(myNotesDTO);
+        MyNotesContext myNotesContext = new MyNotesContext(telegramBotService, update, userId, userMessage);
+        prepareMessage(myNotesContext);
     }
 
     /** Метод prepareMessage() определяет, какой блок кода нужно вызвать в зависимости от запроса пользователя.
      * Например, если пользователь повторно ввёл команду, перелистывает страницу и т.д.*/
-    private void prepareMessage(MyNotesDTO myNotesDTO) {
-        Long userId = myNotesDTO.getUserId();
+    private void prepareMessage(MyNotesContext myNotesContext) {
+        Long userId = myNotesContext.userId();
         List<NotesEntity> notes = noteService.getAllUserNotes(userId);
 
-        if (myNotesDTO.getUserMessage().equals(getCommandName())) {
+        if (myNotesContext.userMessage().equals(getCommandName())) {
             logger.info("[MyNotes] Начинаю выполнение команды {} для пользователя {} ...", getCommandName(), userId);
-            handleCommand(notes, myNotesDTO);
+            handleCommand(notes, myNotesContext);
         }
-        else if (myNotesDTO.getUpdate().hasCallbackQuery()) {
+        else if (myNotesContext.update().hasCallbackQuery()) {
             logger.info("[MyNotes] Поступил Callback-запрос от пользователя {} ...", userId);
-            handleCallbackQuery(myNotesDTO);
+            handleCallbackQuery(myNotesContext);
         }
     }
 
     /** Обработка команды /my_notes */
-    private void handleCommand(List<NotesEntity> notes, MyNotesDTO myNotesDTO) {
-        Long userId = myNotesDTO.getUserId();
+    private void handleCommand(List<NotesEntity> notes, MyNotesContext myNotesContext) {
+        Long userId = myNotesContext.userId();
 
         if (notes.isEmpty()) {
             logger.info("[MyNotes] Список заметок пользователя {} пуст.", userId);
 
-            sendEmptyPage(myNotesDTO);
+            sendEmptyPage(myNotesContext);
         } else {
             logger.info("[MyNotes] Подготавливаю список заметок для пользователя {} ...", userId);
 
-            sendReadyPage(myNotesDTO, 0);
+            sendReadyPage(myNotesContext, 0);
         }
     }
 
     /** Если пользователь перелистывает страницы, prepareMessage() обратится к этому методу*/
-    private void handleCallbackQuery(MyNotesDTO myNotesDTO) {
-        Long userId = myNotesDTO.getUserId();
-        String data = myNotesDTO.getUpdate().getCallbackQuery().getData();
+    private void handleCallbackQuery(MyNotesContext myNotesContext) {
+        Long userId = myNotesContext.userId();
+        String data = myNotesContext.update().getCallbackQuery().getData();
         SendMessage message = new SendMessage();
 
         if (data.startsWith(getPagePrefix())) {
             logger.info("[MyNotes] Пользователь {} перелистывает страницу с заметками...", userId);
             int page = Integer.parseInt(data.replace(getPagePrefix(), ""));
 
-            message = getReadyPageWithNotes(myNotesDTO, page, message);
-            messageSender.sendMessageToUser(userId, message, myNotesDTO.getTelegramBotService());
+            message = getReadyPageWithNotes(myNotesContext, page, message);
+            messageSender.sendMessageToUser(userId, message, myNotesContext.telegramBotService());
         }
     }
 
 
-    private void sendReadyPage(MyNotesDTO myNotesDTO, int page) {
+    private void sendReadyPage(MyNotesContext myNotesContext, int page) {
         SendMessage message = new SendMessage();
 
-        message = getReadyPageWithNotes(myNotesDTO, page, message);
-        messageSender.sendMessageToUser(myNotesDTO.getUserId(), message, myNotesDTO.getTelegramBotService());
+        message = getReadyPageWithNotes(myNotesContext, page, message);
+        messageSender.sendMessageToUser(myNotesContext.userId(), message, myNotesContext.telegramBotService());
     }
 
-    private void sendEmptyPage(MyNotesDTO myNotesDTO) {
-        SendMessage message = notesPageBuilder.getEmptyMessage(myNotesDTO.getUserId());
-        messageSender.sendMessageToUser(myNotesDTO.getUserId(), message, myNotesDTO.getTelegramBotService());
+    private void sendEmptyPage(MyNotesContext myNotesContext) {
+        SendMessage message = notesPageBuilder.getEmptyMessage(myNotesContext.userId());
+        messageSender.sendMessageToUser(myNotesContext.userId(), message, myNotesContext.telegramBotService());
     }
 
     /** Формирует страницу с заметками и кнопками пагинации.*/
-    private SendMessage getReadyPageWithNotes(MyNotesDTO myNotesDTO, int page, SendMessage message) {
-        Long userId = myNotesDTO.getUserId();
+    private SendMessage getReadyPageWithNotes(MyNotesContext myNotesContext, int page, SendMessage message) {
+        Long userId = myNotesContext.userId();
 
         logger.info("[MyNotes] Подготавливаю сообщение с заметками для пользователя {} ...", userId);
 
