@@ -11,8 +11,8 @@
     </parent>
     <groupId>com.tgbot</groupId>
     <artifactId>noteskeeperbot</artifactId>
-    <version>1.0.21</version>
-    <name>NotesKeeperBot</name>
+    <version>1.0.22</version>
+    <name>Notes Keeper Bot</name>
     <description>A simple Telegram bot for storing personal notes with pagination.</description>
 
     <url/>
