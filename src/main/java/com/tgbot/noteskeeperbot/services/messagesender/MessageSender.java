@@ -6,6 +6,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 
 @Service
@@ -17,7 +18,7 @@ public class MessageSender {
             logger.info("[MessageSender] Начинаю отправку текстового сообщения пользователю {} ...", userId);
             telegramBotService.execute(message);
             logger.info("[MessageSender] Отправка текстового сообщения пользователю {} выполнена успешно!", userId);
-        } catch (Exception e) {
+        } catch (TelegramApiException e) {
             logger.error("[MessageSender] Ошибка при отправке текстового сообщения пользователю {} : {}", userId, e.getMessage(), e);
         }
     }
@@ -27,13 +28,16 @@ public class MessageSender {
             logger.info("[MessageSender] Начинаю отправку изображения пользователю {} ...", userId);
             telegramBotService.execute(image);
             logger.info("[MessageSender] Отправка изображения пользователю {} выполнена успешно!", userId);
-        } catch (Exception e) {
+        } catch (TelegramApiException e) {
             logger.error("[MessageSender] Ошибка при отправке изображения пользователю {} : {}", userId, e.getMessage(), e);
         }
     }
 
     public SendMessage createMessage(Long userId, String text) {
-        SendMessage message = new SendMessage(userId.toString(), text);
+        SendMessage message = SendMessage.builder()
+                .chatId(userId.toString())
+                .text(text)
+                .build();
         return message;
     }
 }
